@@ -36,6 +36,7 @@ try {
 document.addEventListener("DOMContentLoaded", () => {
   initTabs();
   ensureLanguageFilterUI();
+  upgradeQuartileFilterUI();
   loadSettingsUI();
   updateScopusDbStatus();
   renderPapersTable();
@@ -59,6 +60,29 @@ function ensureLanguageFilterUI() {
     </select>
   `;
   onlyOaEl.parentElement?.insertAdjacentElement("afterend", wrapper);
+}
+
+function upgradeQuartileFilterUI() {
+  const selectEl = document.getElementById("filterQuartile");
+  if (!selectEl) return;
+
+  const currentVal = selectEl.value || "ALL";
+  selectEl.innerHTML = `
+    <option value="ALL">Tất cả hạng Q</option>
+    <option value="Q1_Q2">Nhóm nền tảng: Q1 + Q2</option>
+    <option value="Q1_Q2_Q3">Nhóm mở rộng: Q1 + Q2 + Q3</option>
+    <option value="Q3_Q4">Nhóm bổ sung: Q3 + Q4</option>
+    <option value="Q1">Chỉ Q1</option>
+    <option value="Q2">Chỉ Q2</option>
+    <option value="Q3">Chỉ Q3</option>
+    <option value="Q4">Chỉ Q4</option>
+    <option value="SCOPUS">Có trong danh mục Scopus</option>
+    <option value="NO_Q">Chưa có hạng Q / Ngoài Scopus</option>
+  `;
+
+  if ([...selectEl.options].some((opt) => opt.value === currentVal)) {
+    selectEl.value = currentVal;
+  }
 }
 
 function initTabs() {
@@ -532,6 +556,10 @@ function getFilteredPapers() {
     }
     if (qFilter !== "ALL") {
       if (qFilter === "SCOPUS" && !p.scopusQuartile) return false;
+      if (qFilter === "NO_Q" && p.scopusQuartile) return false;
+      if (qFilter === "Q1_Q2" && !["Q1", "Q2"].includes(p.scopusQuartile)) return false;
+      if (qFilter === "Q1_Q2_Q3" && !["Q1", "Q2", "Q3"].includes(p.scopusQuartile)) return false;
+      if (qFilter === "Q3_Q4" && !["Q3", "Q4"].includes(p.scopusQuartile)) return false;
       if (["Q1", "Q2", "Q3", "Q4"].includes(qFilter) && p.scopusQuartile !== qFilter) return false;
     }
     if (selFilter === "SELECTED" && !p.selected) return false;
