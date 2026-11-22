@@ -35,12 +35,31 @@ try {
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
   initTabs();
+  ensureLanguageFilterUI();
   loadSettingsUI();
   updateScopusDbStatus();
   renderPapersTable();
   renderMatrixTable();
   bindEvents();
 });
+
+function ensureLanguageFilterUI() {
+  const onlyOaEl = document.getElementById("onlyOpenAccess");
+  if (!onlyOaEl || document.getElementById("searchLanguage")) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "form-group";
+  wrapper.style.marginTop = "10px";
+  wrapper.innerHTML = `
+    <label for="searchLanguage">Ngôn ngữ tài liệu (OpenAlex)</label>
+    <select id="searchLanguage">
+      <option value="ALL">Tất cả ngôn ngữ</option>
+      <option value="vi">Tiếng Việt (vi)</option>
+      <option value="en">Tiếng Anh (en)</option>
+    </select>
+  `;
+  onlyOaEl.parentElement?.insertAdjacentElement("afterend", wrapper);
+}
 
 function initTabs() {
   document.querySelectorAll(".tab").forEach((btn) => {
@@ -185,6 +204,7 @@ async function runOpenAlexSearch() {
   const sortBy = document.getElementById("sortBy")?.value || "cited_by_count:desc";
   const minCitations = parseInt(document.getElementById("minCitations")?.value || "0", 10);
   const onlyOA = document.getElementById("onlyOpenAccess")?.value === "oa";
+  const lang = document.getElementById("searchLanguage")?.value || "ALL";
 
   const statusEl = document.getElementById("searchStatus");
   const btn = document.getElementById("btnRunSearch");
@@ -194,22 +214,28 @@ async function runOpenAlexSearch() {
   let fetched = [];
   let cursor = "*";
   const perPage = 100;
-  let stoppedByPaginationLimit = false;
+  let stoppedByLimit = false;
 
   try {
     while (fetched.length < maxResults && cursor) {
       const filters = [`publication_year:${yearFrom}-${yearTo}`, "type:article"];
       if (minCitations > 0) filters.push(`cited_by_count:>${minCitations - 1}`);
       if (onlyOA) filters.push("is_oa:true");
+      if (lang !== "ALL") filters.push(`language:${lang}`);
 
       let url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&filter=${filters.join(",")}&sort=${sortBy}&per-page=${perPage}&cursor=${encodeURIComponent(cursor)}`;
       if (settings.email) url += `&mailto=${encodeURIComponent(settings.email)}`;
 
-      const res = await fetch(url);
+      let res = await fetch(url);
+      if (res.status === 429) {
+        if (statusEl) statusEl.textContent = "OpenAlex giới hạn tạm thời (HTTP 429), đang đợi 5 giây thử lại...";
+        await sleep(5000);
+        res = await fetch(url);
+      }
+
       if (!res.ok) {
-        // Nếu trang sau bị OpenAlex yêu cầu API key (401) nhưng trang 1 đã có dữ liệu, giữ lại dữ liệu đã lấy
-        if (res.status === 401 && fetched.length > 0) {
-          stoppedByPaginationLimit = true;
+        if ((res.status === 401 || res.status === 429) && fetched.length > 0) {
+          stoppedByLimit = true;
           break;
         }
         throw new Error(`HTTP ${res.status}`);
@@ -231,7 +257,7 @@ async function runOpenAlexSearch() {
 
     for (const w of fetched) {
       const doi = w.doi ? w.doi.replace("https://doi.org/", "").toLowerCase().trim() : "";
-      const normTitle = (w.title || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const normTitle = (w.title || "").toLowerCase().replace(/[^a-z0-9\u00C0-\u1EF9]/g, "");
       const dedupKey = doi || normTitle;
       if (!dedupKey || seen.has(dedupKey)) continue;
       seen.add(dedupKey);
@@ -274,8 +300,8 @@ async function runOpenAlexSearch() {
     renderPapersTable();
     renderMatrixTable();
     if (statusEl) {
-      statusEl.textContent = stoppedByPaginationLimit
-        ? `Hoàn tất! Thu được ${papers.length} bài đầu tiên (OpenAlex giới hạn 100 bài/lượt khi chưa dùng API key).`
+      statusEl.textContent = stoppedByLimit
+        ? `Hoàn tất một phần! Thu được ${papers.length} bài (do giới hạn tần suất/phân trang của OpenAlex).`
         : `Hoàn tất! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
     }
   } catch (err) {
@@ -658,7 +684,7 @@ async function runAiMatrixAnalysis() {
   if (btnRun) btnRun.disabled = true;
   if (btnStop) btnStop.disabled = false;
 
-  const delayBetweenCallsMs = 3500; // Nghỉ 3.5 giây giữa mỗi bài để tránh dính Rate Limit 429
+  const delayBetweenCallsMs = 3500;
 
   for (let i = 0; i < targets.length; i++) {
     if (stopAiFlag) {
@@ -684,7 +710,6 @@ async function runAiMatrixAnalysis() {
       renderMatrixTable();
     }
 
-    // Nghỉ nhịp an toàn trước khi gọi bài tiếp theo
     if (i < targets.length - 1 && !stopAiFlag) {
       if (statusEl) {
         statusEl.textContent = `Xong bài ${i + 1}/${targets.length}. Đang nghỉ 3,5 giây tránh giới hạn tốc độ API...`;
@@ -704,7 +729,6 @@ async function callAiExtractMatrixWithRetry(paper, statusEl, currentIdx, totalCo
   try {
     return await callAiExtractMatrix(paper);
   } catch (err) {
-    // Nếu gặp lỗi 429 (Too Many Requests), tự đợi 12 giây rồi thử lại 1 lần
     if (err.message.includes("429") && !stopAiFlag) {
       if (statusEl) {
         statusEl.textContent = `API tạm giới hạn tốc độ (429) ở bài ${currentIdx}/${totalCount}. Đang đợi 12 giây để tự thử lại...`;
