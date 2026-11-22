@@ -75,6 +75,10 @@ function savePapers() {
   updateStats();
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ==========================================
 // EVENT BINDINGS
 // ==========================================
@@ -190,6 +194,7 @@ async function runOpenAlexSearch() {
   let fetched = [];
   let cursor = "*";
   const perPage = 100;
+  let stoppedByPaginationLimit = false;
 
   try {
     while (fetched.length < maxResults && cursor) {
@@ -201,7 +206,14 @@ async function runOpenAlexSearch() {
       if (settings.email) url += `&mailto=${encodeURIComponent(settings.email)}`;
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        // Nếu trang sau bị OpenAlex yêu cầu API key (401) nhưng trang 1 đã có dữ liệu, giữ lại dữ liệu đã lấy
+        if (res.status === 401 && fetched.length > 0) {
+          stoppedByPaginationLimit = true;
+          break;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
       const data = await res.json();
 
       if (!data.results || data.results.length === 0) break;
@@ -262,7 +274,9 @@ async function runOpenAlexSearch() {
     renderPapersTable();
     renderMatrixTable();
     if (statusEl) {
-      statusEl.textContent = `Hoàn tất! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
+      statusEl.textContent = stoppedByPaginationLimit
+        ? `Hoàn tất! Thu được ${papers.length} bài đầu tiên (OpenAlex giới hạn 100 bài/lượt khi chưa dùng API key).`
+        : `Hoàn tất! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
     }
   } catch (err) {
     console.error(err);
@@ -644,6 +658,8 @@ async function runAiMatrixAnalysis() {
   if (btnRun) btnRun.disabled = true;
   if (btnStop) btnStop.disabled = false;
 
+  const delayBetweenCallsMs = 3500; // Nghỉ 3.5 giây giữa mỗi bài để tránh dính Rate Limit 429
+
   for (let i = 0; i < targets.length; i++) {
     if (stopAiFlag) {
       if (statusEl) statusEl.textContent = `Đã dừng ở bài ${i}/${targets.length}.`;
@@ -655,7 +671,7 @@ async function runAiMatrixAnalysis() {
     }
 
     try {
-      const result = await callAiExtractMatrix(p);
+      const result = await callAiExtractMatrixWithRetry(p, statusEl, i + 1, targets.length);
       p.aiSummary = result.summary || "";
       p.aiMethod = result.method || "";
       p.aiFindings = result.findings || "";
@@ -667,12 +683,38 @@ async function runAiMatrixAnalysis() {
       p.aiSummary = `Lỗi AI: ${err.message}`;
       renderMatrixTable();
     }
+
+    // Nghỉ nhịp an toàn trước khi gọi bài tiếp theo
+    if (i < targets.length - 1 && !stopAiFlag) {
+      if (statusEl) {
+        statusEl.textContent = `Xong bài ${i + 1}/${targets.length}. Đang nghỉ 3,5 giây tránh giới hạn tốc độ API...`;
+      }
+      await sleep(delayBetweenCallsMs);
+    }
   }
 
   if (btnRun) btnRun.disabled = false;
   if (btnStop) btnStop.disabled = true;
   if (!stopAiFlag && statusEl) {
     statusEl.textContent = `Hoàn tất phân tích ${targets.length} bài báo!`;
+  }
+}
+
+async function callAiExtractMatrixWithRetry(paper, statusEl, currentIdx, totalCount) {
+  try {
+    return await callAiExtractMatrix(paper);
+  } catch (err) {
+    // Nếu gặp lỗi 429 (Too Many Requests), tự đợi 12 giây rồi thử lại 1 lần
+    if (err.message.includes("429") && !stopAiFlag) {
+      if (statusEl) {
+        statusEl.textContent = `API tạm giới hạn tốc độ (429) ở bài ${currentIdx}/${totalCount}. Đang đợi 12 giây để tự thử lại...`;
+      }
+      await sleep(12000);
+      if (!stopAiFlag) {
+        return await callAiExtractMatrix(paper);
+      }
+    }
+    throw err;
   }
 }
 
