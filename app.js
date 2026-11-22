@@ -1,10 +1,34 @@
 // ==========================================
 // STATE & LOCAL STORAGE
 // ==========================================
-let papers = JSON.parse(localStorage.getItem("rw_papers") || "[]");
-let scopusMap = JSON.parse(localStorage.getItem("rw_scopus_map") || "{}"); // key: normalized ISSN or Title -> { quartile, sjr, title }
-let settings = JSON.parse(localStorage.getItem("rw_settings") || '{"provider":"gemini","model":"gemini-2.5-flash","apiKey":"","email":""}');
+let papers = [];
+let scopusMap = {}; // key: "I:ISSN" hoặc "T:title" -> { q, sjr }
+let settings = {
+  provider: "gemini",
+  model: "gemini-2.5-flash",
+  apiKey: "",
+  email: ""
+};
 let stopAiFlag = false;
+
+try {
+  papers = JSON.parse(localStorage.getItem("rw_papers") || "[]");
+} catch (e) {
+  papers = [];
+}
+
+try {
+  scopusMap = JSON.parse(localStorage.getItem("rw_scopus_map") || "{}");
+} catch (e) {
+  scopusMap = {};
+}
+
+try {
+  const savedSettings = JSON.parse(localStorage.getItem("rw_settings") || "null");
+  if (savedSettings && typeof savedSettings === "object") {
+    settings = { ...settings, ...savedSettings };
+  }
+} catch (e) {}
 
 // ==========================================
 // INITIALIZATION
@@ -19,25 +43,35 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initTabs() {
-  document.querySelectorAll(".tab").forEach(btn => {
+  document.querySelectorAll(".tab").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
       btn.classList.add("active");
-      document.getElementById(btn.dataset.tab).classList.add("active");
+      const target = document.getElementById(btn.dataset.tab);
+      if (target) target.classList.add("active");
     });
   });
 }
 
 function loadSettingsUI() {
-  document.getElementById("aiProvider").value = settings.provider || "gemini";
-  document.getElementById("aiModel").value = settings.model || "gemini-2.5-flash";
-  document.getElementById("aiApiKey").value = settings.apiKey || "";
-  document.getElementById("userEmail").value = settings.email || "";
+  const providerEl = document.getElementById("aiProvider");
+  const modelEl = document.getElementById("aiModel");
+  const apiKeyEl = document.getElementById("aiApiKey");
+  const emailEl = document.getElementById("userEmail");
+
+  if (providerEl) providerEl.value = settings.provider || "gemini";
+  if (modelEl) modelEl.value = settings.model || "gemini-2.5-flash";
+  if (apiKeyEl) apiKeyEl.value = settings.apiKey || "";
+  if (emailEl) emailEl.value = settings.email || "";
 }
 
 function savePapers() {
-  localStorage.setItem("rw_papers", JSON.stringify(papers));
+  try {
+    localStorage.setItem("rw_papers", JSON.stringify(papers));
+  } catch (e) {
+    console.warn("Không lưu được rw_papers vào localStorage:", e);
+  }
   updateStats();
 }
 
@@ -45,91 +79,113 @@ function savePapers() {
 // EVENT BINDINGS
 // ==========================================
 function bindEvents() {
-  document.getElementById("btnRunSearch").addEventListener("click", runOpenAlexSearch);
-  document.getElementById("filterText").addEventListener("input", renderPapersTable);
-  document.getElementById("filterQuartile").addEventListener("change", renderPapersTable);
-  document.getElementById("filterSelected").addEventListener("change", renderPapersTable);
+  document.getElementById("btnRunSearch")?.addEventListener("click", runOpenAlexSearch);
+  document.getElementById("filterText")?.addEventListener("input", renderPapersTable);
+  document.getElementById("filterQuartile")?.addEventListener("change", renderPapersTable);
+  document.getElementById("filterSelected")?.addEventListener("change", renderPapersTable);
 
-  document.getElementById("checkAllHeader").addEventListener("change", (e) => {
-    const visibleIds = getFilteredPapers().map(p => p.id);
-    papers.forEach(p => { if (visibleIds.includes(p.id)) p.selected = e.target.checked; });
+  document.getElementById("checkAllHeader")?.addEventListener("change", (e) => {
+    const visibleIds = new Set(getFilteredPapers().map((p) => p.id));
+    papers.forEach((p) => {
+      if (visibleIds.has(p.id)) p.selected = e.target.checked;
+    });
     savePapers();
     renderPapersTable();
     renderMatrixTable();
   });
 
-  document.getElementById("btnSelectAllVisible").addEventListener("click", () => {
-    const visibleIds = getFilteredPapers().map(p => p.id);
-    papers.forEach(p => { if (visibleIds.includes(p.id)) p.selected = true; });
+  document.getElementById("btnSelectAllVisible")?.addEventListener("click", () => {
+    const visibleIds = new Set(getFilteredPapers().map((p) => p.id));
+    papers.forEach((p) => {
+      if (visibleIds.has(p.id)) p.selected = true;
+    });
     savePapers();
     renderPapersTable();
     renderMatrixTable();
   });
 
-  document.getElementById("btnDeselectAll").addEventListener("click", () => {
-    papers.forEach(p => p.selected = false);
+  document.getElementById("btnDeselectAll")?.addEventListener("click", () => {
+    papers.forEach((p) => {
+      p.selected = false;
+    });
     savePapers();
     renderPapersTable();
     renderMatrixTable();
   });
 
   // Scopus CSV Upload
-  document.getElementById("inputScopusCsv").addEventListener("change", handleScopusCsvUpload);
-  document.getElementById("btnReMatchScopus").addEventListener("click", () => {
-    papers.forEach(p => matchScopusForPaper(p));
+  document.getElementById("inputScopusCsv")?.addEventListener("change", handleScopusCsvUpload);
+  document.getElementById("btnReMatchScopus")?.addEventListener("click", () => {
+    papers.forEach((p) => matchScopusForPaper(p));
     savePapers();
     renderPapersTable();
     alert("Đã đối chiếu lại toàn bộ danh sách với dữ liệu Scopus/Q!");
   });
-  document.getElementById("btnClearScopus").addEventListener("click", () => {
+  document.getElementById("btnClearScopus")?.addEventListener("click", () => {
     scopusMap = {};
     localStorage.removeItem("rw_scopus_map");
     updateScopusDbStatus();
+    papers.forEach((p) => matchScopusForPaper(p));
+    savePapers();
+    renderPapersTable();
   });
 
   // AI Matrix
-  document.getElementById("btnRunAiMatrix").addEventListener("click", runAiMatrixAnalysis);
-  document.getElementById("btnStopAi").addEventListener("click", () => { stopAiFlag = true; });
+  document.getElementById("btnRunAiMatrix")?.addEventListener("click", runAiMatrixAnalysis);
+  document.getElementById("btnStopAi")?.addEventListener("click", () => {
+    stopAiFlag = true;
+  });
 
   // Settings
-  document.getElementById("aiProvider").addEventListener("change", (e) => {
-    document.getElementById("aiModel").value = e.target.value === "gemini" ? "gemini-2.5-flash" : "gpt-4o-mini";
+  document.getElementById("aiProvider")?.addEventListener("change", (e) => {
+    const modelInput = document.getElementById("aiModel");
+    if (modelInput) {
+      modelInput.value = e.target.value === "gemini" ? "gemini-2.5-flash" : "gpt-4o-mini";
+    }
   });
-  document.getElementById("btnSaveSettings").addEventListener("click", () => {
+
+  document.getElementById("btnSaveSettings")?.addEventListener("click", () => {
     settings = {
-      provider: document.getElementById("aiProvider").value,
-      model: document.getElementById("aiModel").value.trim(),
-      apiKey: document.getElementById("aiApiKey").value.trim(),
-      email: document.getElementById("userEmail").value.trim()
+      provider: document.getElementById("aiProvider")?.value || "gemini",
+      model: (document.getElementById("aiModel")?.value || "gemini-2.5-flash").trim(),
+      apiKey: (document.getElementById("aiApiKey")?.value || "").trim(),
+      email: (document.getElementById("userEmail")?.value || "").trim()
     };
-    localStorage.setItem("rw_settings", JSON.stringify(settings));
-    document.getElementById("settingsStatus").textContent = "Đã lưu cấu hình thành công!";
+    try {
+      localStorage.setItem("rw_settings", JSON.stringify(settings));
+    } catch (e) {}
+    const statusEl = document.getElementById("settingsStatus");
+    if (statusEl) statusEl.textContent = "Đã lưu cấu hình thành công!";
   });
 
   // Export / Import
-  document.getElementById("btnExportExcel").addEventListener("click", exportToExcel);
-  document.getElementById("btnExportJson").addEventListener("click", exportProjectJson);
-  document.getElementById("inputImportJson").addEventListener("change", importProjectJson);
+  document.getElementById("btnExportExcel")?.addEventListener("click", exportToExcel);
+  document.getElementById("btnExportJson")?.addEventListener("click", exportProjectJson);
+  document.getElementById("inputImportJson")?.addEventListener("change", importProjectJson);
 }
 
 // ==========================================
 // 1. OPENALEX SEARCH & DEDUPLICATION
 // ==========================================
 async function runOpenAlexSearch() {
-  const query = document.getElementById("searchQuery").value.trim();
-  if (!query) return alert("Vui lòng nhập chủ đề hoặc từ khóa tìm kiếm!");
+  const queryInput = document.getElementById("searchQuery");
+  const query = (queryInput?.value || "").trim();
+  if (!query) {
+    alert("Vui lòng nhập chủ đề hoặc từ khóa tìm kiếm!");
+    return;
+  }
 
-  const yearFrom = document.getElementById("yearFrom").value;
-  const yearTo = document.getElementById("yearTo").value;
-  const maxResults = parseInt(document.getElementById("maxResults").value, 10);
-  const sortBy = document.getElementById("sortBy").value;
-  const minCitations = parseInt(document.getElementById("minCitations").value || "0", 10);
-  const onlyOA = document.getElementById("onlyOpenAccess").value === "oa";
+  const yearFrom = document.getElementById("yearFrom")?.value || "2020";
+  const yearTo = document.getElementById("yearTo")?.value || "2026";
+  const maxResults = parseInt(document.getElementById("maxResults")?.value || "100", 10);
+  const sortBy = document.getElementById("sortBy")?.value || "cited_by_count:desc";
+  const minCitations = parseInt(document.getElementById("minCitations")?.value || "0", 10);
+  const onlyOA = document.getElementById("onlyOpenAccess")?.value === "oa";
 
   const statusEl = document.getElementById("searchStatus");
   const btn = document.getElementById("btnRunSearch");
-  btn.disabled = true;
-  statusEl.textContent = "Đang kết nối OpenAlex API...";
+  if (btn) btn.disabled = true;
+  if (statusEl) statusEl.textContent = "Đang kết nối OpenAlex API...";
 
   let fetched = [];
   let cursor = "*";
@@ -137,9 +193,9 @@ async function runOpenAlexSearch() {
 
   try {
     while (fetched.length < maxResults && cursor) {
-      let filters = [`publication_year:${yearFrom}-${yearTo}`, `type:article`];
+      const filters = [`publication_year:${yearFrom}-${yearTo}`, "type:article"];
       if (minCitations > 0) filters.push(`cited_by_count:>${minCitations - 1}`);
-      if (onlyOA) filters.push(`is_oa:true`);
+      if (onlyOA) filters.push("is_oa:true");
 
       let url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&filter=${filters.join(",")}&sort=${sortBy}&per-page=${perPage}&cursor=${encodeURIComponent(cursor)}`;
       if (settings.email) url += `&mailto=${encodeURIComponent(settings.email)}`;
@@ -150,13 +206,14 @@ async function runOpenAlexSearch() {
 
       if (!data.results || data.results.length === 0) break;
       fetched = fetched.concat(data.results);
-      cursor = data.meta.next_cursor;
-      statusEl.textContent = `Đã quét ${Math.min(fetched.length, maxResults)} / ${maxResults} bài...`;
+      cursor = data.meta?.next_cursor || null;
+      if (statusEl) {
+        statusEl.textContent = `Đã quét ${Math.min(fetched.length, maxResults)} / ${maxResults} bài...`;
+      }
     }
 
     fetched = fetched.slice(0, maxResults);
 
-    // Chuẩn hóa & Loại trùng theo DOI hoặc Tên bài viết
     const seen = new Set();
     const cleaned = [];
 
@@ -167,7 +224,7 @@ async function runOpenAlexSearch() {
       if (!dedupKey || seen.has(dedupKey)) continue;
       seen.add(dedupKey);
 
-      const authorsList = (w.authorships || []).map(a => a.author?.display_name).filter(Boolean);
+      const authorsList = (w.authorships || []).map((a) => a.author?.display_name).filter(Boolean);
       const firstAuthorLastName = authorsList[0] ? authorsList[0].split(" ").pop() : "Unknown";
       const source = w.primary_location?.source || {};
       const pdfUrl = w.open_access?.oa_url || w.primary_location?.pdf_url || "";
@@ -204,16 +261,17 @@ async function runOpenAlexSearch() {
     savePapers();
     renderPapersTable();
     renderMatrixTable();
-    statusEl.textContent = `Hoàn tất! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
+    if (statusEl) {
+      statusEl.textContent = `Hoàn tất! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
+    }
   } catch (err) {
     console.error(err);
-    statusEl.textContent = `Lỗi khi quét dữ liệu: ${err.message}`;
+    if (statusEl) statusEl.textContent = `Lỗi khi quét dữ liệu: ${err.message}`;
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
-// Khôi phục Abstract từ định dạng Inverted Index của OpenAlex
 function reconstructAbstract(invertedIndex) {
   if (!invertedIndex) return "";
   const words = [];
@@ -223,11 +281,14 @@ function reconstructAbstract(invertedIndex) {
   return words.join(" ").trim();
 }
 
-// Đặt tên file chuẩn: TacGia_Nam_TenBai.pdf
 function buildStandardFileName(author, year, title) {
-  const cleanAuthor = (author || "Author").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "");
+  const cleanAuthor = (author || "Author")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "");
   const cleanTitle = (title || "Paper")
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9\s]/g, "")
     .trim()
     .split(/\s+/)
@@ -239,52 +300,142 @@ function buildStandardFileName(author, year, title) {
 // ==========================================
 // 2. ĐỐI CHIẾU SCOPUS / SCIMAGO QUARTILE
 // ==========================================
+function parseCsvLine(line, delimiter = ",") {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    const nextCh = line[i + 1];
+
+    if (ch === '"') {
+      if (inQuotes && nextCh === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === delimiter && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function detectDelimiter(headerLine) {
+  const commas = (headerLine.match(/,/g) || []).length;
+  const semis = (headerLine.match(/;/g) || []).length;
+  return semis > commas ? ";" : ",";
+}
+
 function handleScopusCsvUpload(e) {
-  const file = e.target.files[0];
+  const file = e.target.files?.[0];
   if (!file) return;
 
+  const statusEl = document.getElementById("scopusDbStatus");
+  if (statusEl) statusEl.textContent = `Đang đọc file "${file.name}"...`;
+
   const reader = new FileReader();
-  reader.onload = function(evt) {
-    const text = evt.target.result;
-    // Dùng SheetJS để parse CSV (hỗ trợ cả dấu phẩy và chấm phẩy của SCImago)
-    const workbook = XLSX.read(text, { type: "string" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet);
-
-    let count = 0;
-    rows.forEach(row => {
-      const title = (row["Title"] || row["Source title"] || row["Journal"] || "").toString().trim();
-      const issnRaw = (row["Issn"] || row["ISSN"] || row["EISSN"] || "").toString();
-      const quartile = (row["SJR Best Quartile"] || row["Quartile"] || row["Q"] || "").toString().trim().toUpperCase();
-      const sjr = (row["SJR"] || "").toString().trim();
-
-      const info = { quartile: quartile || "Scopus", sjr, title };
-
-      // Tách nhiều ISSN (SCImago thường ghi dạng "12345678, 87654321")
-      issnRaw.split(/[,;\s]+/).forEach(code => {
-        const cleanIssn = code.replace(/[^0-9Xx]/g, "").toUpperCase();
-        if (cleanIssn.length === 8) {
-          scopusMap[`ISSN:${cleanIssn}`] = info;
-        }
-      });
-
-      if (title) {
-        scopusMap[`TITLE:${title.toLowerCase()}`] = info;
-        count++;
-      }
-    });
-
-    localStorage.setItem("rw_scopus_map", JSON.stringify(scopusMap));
+  reader.onerror = function () {
+    alert("Không đọc được file từ thiết bị. Hãy kiểm tra lại quyền truy cập file.");
     updateScopusDbStatus();
-
-    if (papers.length > 0) {
-      papers.forEach(p => matchScopusForPaper(p));
-      savePapers();
-      renderPapersTable();
-    }
-    alert(`Đã nạp thành công ${count} tạp chí vào bộ nhớ đối chiếu!`);
   };
-  reader.readAsText(file);
+
+  reader.onload = function (evt) {
+    try {
+      const rawText = (evt.target.result || "").replace(/^\uFEFF/, "");
+      const lines = rawText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      if (lines.length < 2) {
+        alert("File CSV rỗng hoặc không có dữ liệu.");
+        updateScopusDbStatus();
+        return;
+      }
+
+      const delimiter = detectDelimiter(lines[0]);
+      const headers = parseCsvLine(lines[0], delimiter).map((h) =>
+        h.replace(/^["']|["']$/g, "").trim().toLowerCase()
+      );
+
+      const idxTitle = headers.findIndex((h) => ["title", "source title", "journal"].includes(h));
+      const idxIssn = headers.findIndex((h) => ["issn", "eissn"].includes(h));
+      const idxQ = headers.findIndex((h) => ["sjr best quartile", "quartile", "q"].includes(h));
+      const idxSjr = headers.findIndex((h) => h === "sjr");
+
+      if (idxTitle === -1 && idxIssn === -1) {
+        alert("Không tìm thấy cột Title hoặc Issn trong file CSV.");
+        updateScopusDbStatus();
+        return;
+      }
+
+      const nextMap = {};
+      let count = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCsvLine(lines[i], delimiter);
+        const title = idxTitle !== -1 ? (cols[idxTitle] || "").replace(/^["']|["']$/g, "").trim() : "";
+        const issnRaw = idxIssn !== -1 ? (cols[idxIssn] || "").replace(/^["']|["']$/g, "").trim() : "";
+        const quartile = idxQ !== -1 ? (cols[idxQ] || "").replace(/^["']|["']$/g, "").trim().toUpperCase() : "";
+        const sjr = idxSjr !== -1 ? (cols[idxSjr] || "").replace(/^["']|["']$/g, "").trim() : "";
+
+        if (!title && !issnRaw) continue;
+
+        const info = {
+          q: quartile || "SCOPUS",
+          sjr: sjr
+        };
+
+        if (issnRaw) {
+          issnRaw.split(/[,;\s/]+/).forEach((code) => {
+            const cleanIssn = code.replace(/[^0-9Xx]/g, "").toUpperCase();
+            if (cleanIssn.length === 8) {
+              nextMap[`I:${cleanIssn}`] = info;
+            }
+          });
+        }
+
+        if (title) {
+          nextMap[`T:${title.toLowerCase()}`] = info;
+          count++;
+        }
+      }
+
+      if (count === 0 && Object.keys(nextMap).length === 0) {
+        alert("Đọc file xong nhưng không có dòng tạp chí hợp lệ nào.");
+        updateScopusDbStatus();
+        return;
+      }
+
+      let savedToStorage = true;
+      try {
+        localStorage.setItem("rw_scopus_map", JSON.stringify(nextMap));
+      } catch (storageErr) {
+        savedToStorage = false;
+      }
+
+      scopusMap = nextMap;
+      updateScopusDbStatus(savedToStorage ? "localStorage" : "memory");
+
+      if (papers.length > 0) {
+        papers.forEach((p) => matchScopusForPaper(p));
+        savePapers();
+        renderPapersTable();
+      }
+
+      e.target.value = "";
+      alert(`Đã nạp thành công ${count.toLocaleString()} tạp chí!`);
+    } catch (err) {
+      console.error(err);
+      alert(`Lỗi khi xử lý file CSV: ${err.message}`);
+      updateScopusDbStatus();
+    }
+  };
+
+  reader.readAsText(file, "UTF-8");
 }
 
 function matchScopusForPaper(paper) {
@@ -292,17 +443,17 @@ function matchScopusForPaper(paper) {
   const issns = (paper.issn || "").split(/[,;\s]+/);
   for (const raw of issns) {
     const clean = raw.replace(/[^0-9Xx]/g, "").toUpperCase();
-    if (clean && scopusMap[`ISSN:${clean}`]) {
-      matched = scopusMap[`ISSN:${clean}`];
+    if (clean && scopusMap[`I:${clean}`]) {
+      matched = scopusMap[`I:${clean}`];
       break;
     }
   }
   if (!matched && paper.journal) {
-    matched = scopusMap[`TITLE:${paper.journal.toLowerCase().trim()}`] || null;
+    matched = scopusMap[`T:${paper.journal.toLowerCase().trim()}`] || null;
   }
 
   if (matched) {
-    paper.scopusQuartile = matched.quartile;
+    paper.scopusQuartile = matched.q;
     paper.sjrScore = matched.sjr;
   } else {
     paper.scopusQuartile = "";
@@ -310,23 +461,31 @@ function matchScopusForPaper(paper) {
   }
 }
 
-function updateScopusDbStatus() {
-  const keys = Object.keys(scopusMap).filter(k => k.startsWith("TITLE:"));
+function updateScopusDbStatus(mode = "localStorage") {
+  const keys = Object.keys(scopusMap || {}).filter((k) => k.startsWith("T:"));
   const el = document.getElementById("scopusDbStatus");
-  el.textContent = keys.length > 0
-    ? `Đang lưu trữ ${keys.length.toLocaleString()} tạp chí trong bộ nhớ đối chiếu cục bộ.`
-    : "Chưa nạp danh mục tạp chí nào.";
+  if (!el) return;
+
+  if (keys.length > 0) {
+    const suffix =
+      mode === "memory"
+        ? " (đang giữ trên phiên trình duyệt hiện tại do file lớn, tải lại trang sẽ cần nạp lại)."
+        : " trong bộ nhớ đối chiếu cục bộ.";
+    el.textContent = `Đang lưu trữ ${keys.length.toLocaleString()} tạp chí${suffix}`;
+  } else {
+    el.textContent = "Chưa nạp danh mục tạp chí nào.";
+  }
 }
 
 // ==========================================
 // 3. RENDER TABLE & TẢI PDF TÊN CHUẨN
 // ==========================================
 function getFilteredPapers() {
-  const q = document.getElementById("filterText").value.toLowerCase().trim();
-  const qFilter = document.getElementById("filterQuartile").value;
-  const selFilter = document.getElementById("filterSelected").value;
+  const q = (document.getElementById("filterText")?.value || "").toLowerCase().trim();
+  const qFilter = document.getElementById("filterQuartile")?.value || "ALL";
+  const selFilter = document.getElementById("filterSelected")?.value || "ALL";
 
-  return papers.filter(p => {
+  return papers.filter((p) => {
     if (q) {
       const hay = `${p.title} ${p.authors} ${p.journal}`.toLowerCase();
       if (!hay.includes(q)) return false;
@@ -343,6 +502,7 @@ function getFilteredPapers() {
 
 function renderPapersTable() {
   const tbody = document.getElementById("papersTbody");
+  if (!tbody) return;
   const list = getFilteredPapers();
   updateStats();
 
@@ -351,41 +511,46 @@ function renderPapersTable() {
     return;
   }
 
-  tbody.innerHTML = list.map(p => {
-    const qBadge = p.scopusQuartile
-      ? `<span class="tag tag-${p.scopusQuartile.toLowerCase()}">${p.scopusQuartile}</span>`
-      : `<span style="color:#94a3b8;font-size:12px;">-</span>`;
+  tbody.innerHTML = list
+    .map((p) => {
+      const qClass = ["Q1", "Q2", "Q3", "Q4"].includes(p.scopusQuartile)
+        ? `tag-${p.scopusQuartile.toLowerCase()}`
+        : "tag-oa";
+      const qBadge = p.scopusQuartile
+        ? `<span class="tag ${qClass}">${escapeHtml(p.scopusQuartile)}</span>`
+        : `<span style="color:#94a3b8;font-size:12px;">-</span>`;
 
-    const pdfBtn = p.pdfUrl
-      ? `<button class="link-btn pdf" onclick="downloadNamedPdf('${p.id}')">Tải PDF chuẩn</button>`
-      : `<span style="font-size:11px;color:#94a3b8;">Khóa</span>`;
+      const pdfBtn = p.pdfUrl
+        ? `<button class="link-btn pdf" onclick="downloadNamedPdf('${p.id}')">Tải PDF chuẩn</button>`
+        : `<span style="font-size:11px;color:#94a3b8;">Khóa</span>`;
 
-    const doiBtn = p.doi
-      ? `<a class="link-btn" href="https://doi.org/${p.doi}" target="_blank" rel="noopener">DOI</a>`
-      : "";
+      const doiBtn = p.doi
+        ? `<a class="link-btn" href="https://doi.org/${encodeURIComponent(p.doi)}" target="_blank" rel="noopener">DOI</a>`
+        : "";
 
-    return `
-      <tr>
-        <td><input type="checkbox" ${p.selected ? "checked" : ""} onchange="togglePaperSelect('${p.id}', this.checked)" /></td>
-        <td><strong>${p.year}</strong></td>
-        <td>
-          <span class="paper-title">${escapeHtml(p.title)}</span>
-          <span class="paper-authors">${escapeHtml(p.authors.slice(0, 140))}${p.authors.length > 140 ? "..." : ""}</span>
-        </td>
-        <td>
-          <div>${escapeHtml(p.journal || "-")}</div>
-          <div style="font-size:11px;color:#64748b;">${p.issnL ? "ISSN: " + p.issnL : ""}</div>
-        </td>
-        <td>${qBadge}</td>
-        <td>${p.citations}</td>
-        <td>${pdfBtn}${doiBtn}</td>
-      </tr>
-    `;
-  }).join("");
+      return `
+        <tr>
+          <td><input type="checkbox" ${p.selected ? "checked" : ""} onchange="togglePaperSelect('${p.id}', this.checked)" /></td>
+          <td><strong>${escapeHtml(p.year)}</strong></td>
+          <td>
+            <span class="paper-title">${escapeHtml(p.title)}</span>
+            <span class="paper-authors">${escapeHtml(p.authors.slice(0, 140))}${p.authors.length > 140 ? "..." : ""}</span>
+          </td>
+          <td>
+            <div>${escapeHtml(p.journal || "-")}</div>
+            <div style="font-size:11px;color:#64748b;">${p.issnL ? "ISSN: " + escapeHtml(p.issnL) : ""}</div>
+          </td>
+          <td>${qBadge}</td>
+          <td>${escapeHtml(p.citations)}</td>
+          <td>${pdfBtn}${doiBtn}</td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
-window.togglePaperSelect = function(id, checked) {
-  const p = papers.find(item => item.id === id);
+window.togglePaperSelect = function (id, checked) {
+  const p = papers.find((item) => item.id === id);
   if (p) {
     p.selected = checked;
     savePapers();
@@ -393,9 +558,8 @@ window.togglePaperSelect = function(id, checked) {
   }
 };
 
-// Tải PDF và đặt tên chuẩn; nếu server nguồn chặn CORS thì mở tab mới + copy tên file chuẩn vào clipboard
-window.downloadNamedPdf = async function(id) {
-  const p = papers.find(item => item.id === id);
+window.downloadNamedPdf = async function (id) {
+  const p = papers.find((item) => item.id === id);
   if (!p || !p.pdfUrl) return;
 
   try {
@@ -411,20 +575,25 @@ window.downloadNamedPdf = async function(id) {
     a.remove();
     URL.revokeObjectURL(blobUrl);
   } catch (err) {
-    // Fallback khi server tạp chí chặn CORS tải ngầm từ trình duyệt
     navigator.clipboard?.writeText(p.standardFileName);
     window.open(p.pdfUrl, "_blank");
-    alert(`Nguồn tạp chí chặn tải trực tiếp qua trình duyệt nên đã mở PDF ở tab mới.\nTên file chuẩn đã được copy vào Clipboard:\n${p.standardFileName}`);
+    alert(
+      `Nguồn tạp chí chặn tải trực tiếp qua trình duyệt nên đã mở PDF ở tab mới.\nTên file chuẩn đã được copy vào Clipboard:\n${p.standardFileName}`
+    );
   }
 };
 
 function updateStats() {
-  document.getElementById("statTotal").textContent = papers.length;
-  document.getElementById("statOA").textContent = papers.filter(p => p.pdfUrl).length;
-  document.getElementById("statScopus").textContent = papers.filter(p => p.scopusQuartile).length;
-  const selCount = papers.filter(p => p.selected).length;
-  document.getElementById("statSelected").textContent = selCount;
-  document.getElementById("aiSelectedCount").textContent = selCount;
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  const selCount = papers.filter((p) => p.selected).length;
+  setText("statTotal", papers.length);
+  setText("statOA", papers.filter((p) => p.pdfUrl).length);
+  setText("statScopus", papers.filter((p) => p.scopusQuartile).length);
+  setText("statSelected", selCount);
+  setText("aiSelectedCount", selCount);
 }
 
 // ==========================================
@@ -432,23 +601,28 @@ function updateStats() {
 // ==========================================
 function renderMatrixTable() {
   const tbody = document.getElementById("matrixTbody");
-  const selectedPapers = papers.filter(p => p.selected);
+  if (!tbody) return;
+  const selectedPapers = papers.filter((p) => p.selected);
 
   if (selectedPapers.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-row">Chưa có bài nào được chọn. Hãy tick chọn bài ở Tab 1.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = selectedPapers.map(p => `
-    <tr>
-      <td><strong>${escapeHtml(p.firstAuthor)} (${p.year})</strong><br><span style="font-size:11px;color:#64748b;">${escapeHtml(p.journal)}</span></td>
-      <td>${escapeHtml(p.title)}</td>
-      <td>${escapeHtml(p.aiSummary || (p.abstract ? "[Chưa chạy AI]" : "[Không có Abstract]"))}</td>
-      <td>${escapeHtml(p.aiMethod || "-")}</td>
-      <td>${escapeHtml(p.aiFindings || "-")}</td>
-      <td>${escapeHtml(p.aiGap || "-")}</td>
-    </tr>
-  `).join("");
+  tbody.innerHTML = selectedPapers
+    .map(
+      (p) => `
+      <tr>
+        <td><strong>${escapeHtml(p.firstAuthor)} (${escapeHtml(p.year)})</strong><br><span style="font-size:11px;color:#64748b;">${escapeHtml(p.journal)}</span></td>
+        <td>${escapeHtml(p.title)}</td>
+        <td>${escapeHtml(p.aiSummary || (p.abstract ? "[Chưa chạy AI]" : "[Không có Abstract]"))}</td>
+        <td>${escapeHtml(p.aiMethod || "-")}</td>
+        <td>${escapeHtml(p.aiFindings || "-")}</td>
+        <td>${escapeHtml(p.aiGap || "-")}</td>
+      </tr>
+    `
+    )
+    .join("");
 }
 
 async function runAiMatrixAnalysis() {
@@ -457,7 +631,7 @@ async function runAiMatrixAnalysis() {
     return;
   }
 
-  const targets = papers.filter(p => p.selected && p.abstract);
+  const targets = papers.filter((p) => p.selected && p.abstract);
   if (targets.length === 0) {
     alert("Không có bài đã chọn nào có dữ liệu Abstract để phân tích!");
     return;
@@ -467,16 +641,18 @@ async function runAiMatrixAnalysis() {
   const btnRun = document.getElementById("btnRunAiMatrix");
   const btnStop = document.getElementById("btnStopAi");
   const statusEl = document.getElementById("aiStatus");
-  btnRun.disabled = true;
-  btnStop.disabled = false;
+  if (btnRun) btnRun.disabled = true;
+  if (btnStop) btnStop.disabled = false;
 
   for (let i = 0; i < targets.length; i++) {
     if (stopAiFlag) {
-      statusEl.textContent = `Đã dừng ở bài ${i}/${targets.length}.`;
+      if (statusEl) statusEl.textContent = `Đã dừng ở bài ${i}/${targets.length}.`;
       break;
     }
     const p = targets[i];
-    statusEl.textContent = `Đang phân tích bài ${i + 1}/${targets.length}: ${p.title.slice(0, 50)}...`;
+    if (statusEl) {
+      statusEl.textContent = `Đang phân tích bài ${i + 1}/${targets.length}: ${p.title.slice(0, 50)}...`;
+    }
 
     try {
       const result = await callAiExtractMatrix(p);
@@ -493,9 +669,11 @@ async function runAiMatrixAnalysis() {
     }
   }
 
-  btnRun.disabled = false;
-  btnStop.disabled = true;
-  if (!stopAiFlag) statusEl.textContent = `Hoàn tất phân tích ${targets.length} bài báo!`;
+  if (btnRun) btnRun.disabled = false;
+  if (btnStop) btnStop.disabled = true;
+  if (!stopAiFlag && statusEl) {
+    statusEl.textContent = `Hoàn tất phân tích ${targets.length} bài báo!`;
+  }
 }
 
 async function callAiExtractMatrix(paper) {
@@ -511,7 +689,7 @@ Tiêu đề: ${paper.title}
 Abstract: ${paper.abstract}`;
 
   if (settings.provider === "gemini") {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${settings.model}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(settings.model)}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -529,7 +707,7 @@ Abstract: ${paper.abstract}`;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${settings.apiKey}`
+        Authorization: `Bearer ${settings.apiKey}`
       },
       body: JSON.stringify({
         model: settings.model,
@@ -547,34 +725,39 @@ Abstract: ${paper.abstract}`;
 // 5. XUẤT EXCEL TỔNG HỢP & LƯU DỰ ÁN
 // ==========================================
 function exportToExcel() {
-  if (papers.length === 0) return alert("Chưa có dữ liệu để xuất Excel!");
+  if (papers.length === 0) {
+    alert("Chưa có dữ liệu để xuất Excel!");
+    return;
+  }
+  if (typeof XLSX === "undefined") {
+    alert("Thư viện xuất Excel (XLSX) chưa tải xong. Vui lòng kiểm tra kết nối mạng và tải lại trang.");
+    return;
+  }
 
   const wb = XLSX.utils.book_new();
 
-  // Sheet 1: Toàn bộ tài liệu đã quét & đối chiếu Scopus/Q
   const sheet1Data = papers.map((p, idx) => ({
-    "STT": idx + 1,
-    "Chọn": p.selected ? "x" : "",
-    "Năm": p.year,
+    STT: idx + 1,
+    Chọn: p.selected ? "x" : "",
+    Năm: p.year,
     "Tác giả": p.authors,
     "Tên bài báo": p.title,
     "Tạp chí": p.journal,
-    "ISSN": p.issnL || p.issn,
+    ISSN: p.issnL || p.issn,
     "Hạng Scopus/Q": p.scopusQuartile || "Chưa khớp",
-    "SJR": p.sjrScore,
+    SJR: p.sjrScore,
     "Số trích dẫn": p.citations,
-    "DOI": p.doi ? `https://doi.org/${p.doi}` : "",
+    DOI: p.doi ? `https://doi.org/${p.doi}` : "",
     "Link PDF Mở": p.pdfUrl,
     "Tên file PDF chuẩn": p.standardFileName,
-    "Abstract": p.abstract
+    Abstract: p.abstract
   }));
   const ws1 = XLSX.utils.json_to_sheet(sheet1Data);
   XLSX.utils.book_append_sheet(wb, ws1, "Tong_hop_tai_lieu");
 
-  // Sheet 2: Ma trận tài liệu (Các bài đã chọn + Phân tích AI)
-  const selected = papers.filter(p => p.selected);
+  const selected = papers.filter((p) => p.selected);
   const sheet2Data = (selected.length > 0 ? selected : papers).map((p, idx) => ({
-    "STT": idx + 1,
+    STT: idx + 1,
     "Tác giả (Năm)": `${p.firstAuthor} (${p.year})`,
     "Tên bài báo": p.title,
     "Tạp chí & Hạng Q": `${p.journal} ${p.scopusQuartile ? "(" + p.scopusQuartile + ")" : ""}`,
@@ -582,7 +765,7 @@ function exportToExcel() {
     "Phương pháp & Dữ liệu (AI)": p.aiMethod,
     "Phát hiện chính (AI)": p.aiFindings,
     "Khoảng trống nghiên cứu (AI)": p.aiGap,
-    "DOI": p.doi ? `https://doi.org/${p.doi}` : ""
+    DOI: p.doi ? `https://doi.org/${p.doi}` : ""
   }));
   const ws2 = XLSX.utils.json_to_sheet(sheet2Data);
   XLSX.utils.book_append_sheet(wb, ws2, "Ma_tran_tai_lieu");
@@ -592,7 +775,10 @@ function exportToExcel() {
 }
 
 function exportProjectJson() {
-  const blob = new Blob([JSON.stringify({ papers, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" });
+  const blob = new Blob(
+    [JSON.stringify({ papers, exportedAt: new Date().toISOString() }, null, 2)],
+    { type: "application/json" }
+  );
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -602,7 +788,7 @@ function exportProjectJson() {
 }
 
 function importProjectJson(e) {
-  const file = e.target.files[0];
+  const file = e.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (evt) => {
@@ -614,16 +800,19 @@ function importProjectJson(e) {
         renderPapersTable();
         renderMatrixTable();
         alert(`Đã nạp thành công ${papers.length} bài báo từ file dự án!`);
+      } else {
+        alert("File JSON không có danh sách bài báo hợp lệ.");
       }
     } catch (err) {
       alert("File JSON không hợp lệ!");
     }
   };
-  reader.readAsText(file);
+  reader.readAsText(file, "UTF-8");
 }
 
 function escapeHtml(str) {
-  return (str || "").toString()
+  return (str ?? "")
+    .toString()
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
