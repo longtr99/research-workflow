@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Research Workflow — Quét, Lọc, Scopus/Q & Ma Trận Tài Liệu</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- SheetJS để xuất file Excel .xlsx trực tiếp trên trình duyệt -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="badge">PERSONAL WORKFLOW</span>
+      <h1>AI Research Workflow</h1>
+    </div>
+    <div class="top-actions">
+      <button id="btnExportJson" class="btn btn-secondary" title="Lưu dự án ra file JSON">Lưu Dự Án (.json)</button>
+      <label class="btn btn-secondary" title="Nạp lại dự án đã lưu">
+        Nạp Dự Án
+        <input type="file" id="inputImportJson" accept=".json" hidden />
+      </label>
+      <button id="btnExportExcel" class="btn btn-primary">Xuất Excel Tổng Hợp (.xlsx)</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="tab-search">1. Quét & Lọc Dữ Liệu</button>
+    <button class="tab" data-tab="tab-scopus">2. Đối Chiếu Scopus / Q</button>
+    <button class="tab" data-tab="tab-ai">3. AI Tóm Tắt & Ma Trận</button>
+    <button class="tab" data-tab="tab-settings">4. Cấu Hình AI & Dữ Liệu</button>
+  </nav>
+
+  <main class="container">
+    <!-- TAB 1: QUÉT & LỌC -->
+    <section id="tab-search" class="tab-content active">
+      <div class="card">
+        <h2>Truy vấn kho dữ liệu học thuật mở (OpenAlex)</h2>
+        <div class="grid-4">
+          <div class="form-group col-2">
+            <label>Chủ đề / Từ khóa tìm kiếm (Tiếng Anh cho kết quả tốt nhất)</label>
+            <input type="text" id="searchQuery" placeholder="VD: carbon accounting OR corporate carbon disclosure" />
+          </div>
+          <div class="form-group">
+            <label>Từ năm</label>
+            <input type="number" id="yearFrom" value="2020" min="1950" max="2030" />
+          </div>
+          <div class="form-group">
+            <label>Đến năm</label>
+            <input type="number" id="yearTo" value="2026" min="1950" max="2030" />
+          </div>
+        </div>
+
+        <div class="grid-4 mt-12">
+          <div class="form-group">
+            <label>Số lượng bài tối đa cần quét</label>
+            <select id="maxResults">
+              <option value="50">50 bài</option>
+              <option value="100" selected>100 bài</option>
+              <option value="200">200 bài</option>
+              <option value="500">500 bài</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sắp xếp theo</label>
+            <select id="sortBy">
+              <option value="cited_by_count:desc">Trích dẫn cao nhất</option>
+              <option value="relevance_score:desc">Độ liên quan nhất</option>
+              <option value="publication_year:desc">Mới nhất</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Lọc trích dẫn tối thiểu</label>
+            <input type="number" id="minCitations" value="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label>Chỉ lấy bài có PDF mở (Open Access)</label>
+            <select id="onlyOpenAccess">
+              <option value="all" selected>Tất cả bài báo</option>
+              <option value="oa">Chỉ bài có bản PDF mở</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="action-bar mt-16">
+          <button id="btnRunSearch" class="btn btn-primary">Bắt Đầu Quét Dữ Liệu</button>
+          <span id="searchStatus" class="status-text">Sẵn sàng quét dữ liệu.</span>
+        </div>
+      </div>
+
+      <!-- BỘ LỌC NHANH & THỐNG KÊ -->
+      <div class="stats-bar" id="statsBar">
+        <div class="stat-box"><strong id="statTotal">0</strong><span>Tổng bài đã lọc trùng</span></div>
+        <div class="stat-box"><strong id="statOA">0</strong><span>Có PDF truy cập mở</span></div>
+        <div class="stat-box"><strong id="statScopus">0</strong><span>Khớp danh mục Scopus/Q</span></div>
+        <div class="stat-box"><strong id="statSelected">0</strong><span>Đã chọn đưa vào Ma trận</span></div>
+      </div>
+
+      <div class="card">
+        <div class="table-toolbar">
+          <div class="filters">
+            <input type="text" id="filterText" placeholder="Lọc nhanh theo tên bài, tác giả, tạp chí..." />
+            <select id="filterQuartile">
+              <option value="ALL">Tất cả hạng Q</option>
+              <option value="Q1">Chỉ Q1</option>
+              <option value="Q2">Chỉ Q2</option>
+              <option value="Q3">Chỉ Q3</option>
+              <option value="Q4">Chỉ Q4</option>
+              <option value="SCOPUS">Có trong danh mục Scopus</option>
+            </select>
+            <select id="filterSelected">
+              <option value="ALL">Tất cả trạng thái chọn</option>
+              <option value="SELECTED">Đã tick chọn</option>
+              <option value="UNSELECTED">Chưa chọn</option>
+            </select>
+          </div>
+          <div class="bulk-actions">
+            <button id="btnSelectAllVisible" class="btn btn-small">Chọn tất cả đang hiện</button>
+            <button id="btnDeselectAll" class="btn btn-small btn-secondary">Bỏ chọn hết</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="papersTable">
+            <thead>
+              <tr>
+                <th width="36"><input type="checkbox" id="checkAllHeader" /></th>
+                <th width="60">Năm</th>
+                <th>Tên bài báo & Tác giả</th>
+                <th width="180">Tạp chí & ISSN</th>
+                <th width="90">Scopus / Q</th>
+                <th width="80">Trích dẫn</th>
+                <th width="160">Tải PDF / DOI</th>
+              </tr>
+            </thead>
+            <tbody id="papersTbody">
+              <tr><td colspan="7" class="empty-row">Chưa có dữ liệu. Hãy nhập từ khóa và bấm "Bắt Đầu Quét Dữ Liệu".</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ĐỐI CHIẾU SCOPUS / Q -->
+    <section id="tab-scopus" class="tab-content">
+      <div class="card">
+        <h2>Nạp Dữ Liệu Đối Chiếu Tạp Chí (SCImago / Scopus / ABDC)</h2>
+        <p class="desc">
+          Tải file CSV từ <strong>SCImago Journal Rank (scimagojr.com)</strong> hoặc file Excel/CSV danh mục tạp chí của bạn (cần có cột <code>ISSN</code> hoặc <code>Title</code> và cột <code>SJR Best Quartile</code> / <code>Quartile</code>). Dữ liệu sẽ được lưu trên trình duyệt để tự động đối chiếu cho mọi lần tìm kiếm sau.
+        </p>
+        <div class="action-bar mt-12">
+          <label class="btn btn-primary">
+            Tải Lên File CSV Danh Mục Tạp Chí (Scopus / SJR)
+            <input type="file" id="inputScopusCsv" accept=".csv" hidden />
+          </label>
+          <button id="btnReMatchScopus" class="btn btn-secondary">Chạy Đối Chiếu Lại Danh Sách Hiện Tại</button>
+          <button id="btnClearScopus" class="btn btn-danger">Xóa Dữ Liệu Danh Mục</button>
+        </div>
+        <p id="scopusDbStatus" class="status-text mt-12">Chưa nạp danh mục tạp chí nào.</p>
+      </div>
+    </section>
+
+    <!-- TAB 3: AI TÓM TẮT & MA TRẬN TÀI LIỆU -->
+    <section id="tab-ai" class="tab-content">
+      <div class="card">
+        <h2>Tự Động Tóm Tắt & Lập Ma Trận Tài Liệu (Literature Matrix)</h2>
+        <p class="desc">
+          Hệ thống sẽ dùng API Key AI của bạn (cấu hình ở Tab 4) để đọc Abstract của các bài <strong>đã tick chọn</strong> ở Tab 1, sau đó tự động trích xuất thành các cột chuẩn để làm tổng quan tài liệu: <em>Mục tiêu nghiên cứu, Phương pháp & Dữ liệu, Phát hiện chính, Khoảng trống / Hạn chế</em>.
+        </p>
+        <div class="action-bar mt-12">
+          <button id="btnRunAiMatrix" class="btn btn-primary">Chạy AI Phân Tích Các Bài Đã Chọn (<span id="aiSelectedCount">0</span> bài)</button>
+          <button id="btnStopAi" class="btn btn-danger" disabled>Dừng</button>
+          <span id="aiStatus" class="status-text">Sẵn sàng.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrapper">
+          <table id="matrixTable">
+            <thead>
+              <tr>
+                <th width="160">Tác giả (Năm)</th>
+                <th width="200">Tên bài báo</th>
+                <th>Tóm tắt ngắn gọn (Tiếng Việt)</th>
+                <th>Phương pháp & Mẫu dữ liệu</th>
+                <th>Kết quả / Phát hiện chính</th>
+                <th>Khoảng trống nghiên cứu</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTbody">
+              <tr><td colspan="6" class="empty-row">Chưa có dữ liệu ma trận. Hãy tick chọn bài ở Tab 1 và bấm chạy AI.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: CẤU HÌNH API -->
+    <section id="tab-settings" class="tab-content">
+      <div class="card">
+        <h2>Cấu Hình API Cá Nhân (Lưu cục bộ trên trình duyệt)</h2>
+        <p class="desc">API Key chỉ lưu trong <code>localStorage</code> trên máy của bạn, không gửi đi bất kỳ server trung gian nào ngoài nhà cung cấp AI bạn chọn.</p>
+        
+        <div class="grid-2 mt-12">
+          <div class="form-group">
+            <label>Nhà cung cấp AI</label>
+            <select id="aiProvider">
+              <option value="gemini">Google Gemini (Khuyên dùng - Gemini 2.5 Flash)</option>
+              <option value="openai">OpenAI (GPT-4o-mini / GPT-4o)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tên Model</label>
+            <input type="text" id="aiModel" value="gemini-2.5-flash" />
+          </div>
+          <div class="form-group col-2">
+            <label>API Key của bạn</label>
+            <input type="password" id="aiApiKey" placeholder="Nhập Gemini API Key (AIza...) hoặc OpenAI API Key (sk-...)" />
+          </div>
+          <div class="form-group col-2">
+            <label>Email của bạn (Tùy chọn - giúp OpenAlex cấp tốc độ truy vấn ưu tiên Polite Pool)</label>
+            <input type="email" id="userEmail" placeholder="vd: tenban@gmail.com" />
+          </div>
+        </div>
+
+        <div class="action-bar mt-16">
+          <button id="btnSaveSettings" class="btn btn-primary">Lưu Cấu Hình</button>
+          <span id="settingsStatus" class="status-text"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
