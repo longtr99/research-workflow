@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Research Workflow — Quét, Lọc, Scopus/Q & Ma Trận Tài Liệu</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2314365d'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-weight='700' font-size='28' fill='%23d99b26'%3EAI%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="style.css" />
-  <!-- SheetJS để xuất file Excel .xlsx trực tiếp trên trình duyệt -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SheetJS được tải lười (lazy-load) khi bấm Xuất Excel để tăng tốc mở trang và tránh cảnh báo Tracking Prevention -->
 </head>
 <body>
   <header class="topbar">
@@ -64,8 +64,8 @@
           <div class="form-group">
             <label>Sắp xếp theo</label>
             <select id="sortBy">
+              <option value="relevance_score:desc" selected>Độ liên quan nhất (Khuyên dùng)</option>
               <option value="cited_by_count:desc">Trích dẫn cao nhất</option>
-              <option value="relevance_score:desc">Độ liên quan nhất</option>
               <option value="publication_year:desc">Mới nhất</option>
             </select>
           </div>
@@ -192,8 +192,24 @@
             <p class="mode-desc">
               Bấm chạy ngay không cần nhập API Key hay Email. Tự động tách câu mục tiêu, phương pháp/mẫu dữ liệu, phát hiện chính và hạn chế/khoảng trống từ Abstract OpenAlex rồi tự dịch nhanh sang tiếng Việt (giữ tiếng Anh nếu mất mạng).
             </p>
-            <div class="mode-meta" id="tab3FreeHint">Sẵn sàng chạy ngay · Tự dịch tiếng Việt (qua server.py hoặc dịch trực tiếp; an toàn khi mất mạng).</div>
+            <div class="mode-meta" id="tab3FreeHint">Sẵn sàng chạy ngay · Gộp dịch 1 lần/bài &amp; chạy song song siêu nhanh (an toàn khi mất mạng).</div>
           </div>
+        </div>
+
+        <!-- THANH ĐIỀU KHIỂN NHANH AUTO MODEL & TỐI ƯU TOKEN NGAY TẠI TAB 3 -->
+        <div class="perf-strip mt-12" id="tab3PerfStrip">
+          <div class="perf-strip-left">
+            <label class="inline-check" title="Bật để hệ thống tự chọn model nhanh hay chuyên sâu phù hợp với số bài và độ dài Abstract, đồng thời tự dự phòng nếu model lỗi">
+              <input type="checkbox" id="chkTab3AutoModel" />
+              <span><strong>Auto Model</strong> (tự chọn model tối ưu theo yêu cầu)</span>
+            </label>
+            <select id="tab3AutoProfile" class="compact-select" aria-label="Chiến lược Auto Model">
+              <option value="balanced">Cân bằng (Tự điều chỉnh theo lô &amp; độ dài)</option>
+              <option value="speed">Nhanh nhất &amp; tiết kiệm token tối đa</option>
+              <option value="quality">Phân tích học thuật chuyên sâu nhất</option>
+            </select>
+          </div>
+          <div class="perf-estimate" id="tab3PerfEstimate">Ước tính: Chọn bài ở Tab 1 để xem số lần gọi API tối ưu.</div>
         </div>
 
         <div class="action-bar mt-16">
@@ -303,9 +319,21 @@
             <select id="aiModelSelect"></select>
           </div>
 
-          <div class="form-group col-2">
+          <div class="form-group">
+            <label for="aiAutoProfile">Chiến lược Auto Model (khi chọn Auto tự động)</label>
+            <select id="aiAutoProfile">
+              <option value="balanced">Cân bằng thông minh (Tự đổi model theo số bài &amp; độ dài Abstract)</option>
+              <option value="speed">Tốc độ nhanh nhất &amp; tiết kiệm token tối đa (Gộp 5 bài/lần gọi)</option>
+              <option value="quality">Phân tích học thuật chuyên sâu nhất (Model cao cấp · Gộp 2 bài/lần)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
             <label for="aiModel">Tên Model đang sử dụng (tự nhảy khi chọn ở trên, hoặc nhập mã model tùy ý)</label>
-            <input type="text" id="aiModel" value="gemini-3.8-flash" placeholder="VD: gemini-3.8-flash, gemini-4-argon, gpt-6.2-sol, anthropic/claude-sonnet-5-5..." />
+            <input type="text" id="aiModel" value="auto" placeholder="VD: auto, gemini-3.8-flash, gemini-4-argon, gpt-6.2-sol..." />
+          </div>
+
+          <div class="form-group col-2">
             <div id="modelFetchStatus" class="field-hint"></div>
           </div>
 

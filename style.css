@@ -442,3 +442,46 @@ tr:hover { background: #f8fafc; }
   text-decoration: underline;
   padding: 0;
 }
+
+/* ==========================================
+   AUTO MODEL & PERFORMANCE STRIP (TAB 3)
+   ========================================== */
+.perf-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.perf-strip-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.compact-select {
+  padding: 5px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12.5px;
+  background: #fff;
+  color: var(--text);
+}
+.compact-select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.perf-estimate {
+  font-size: 12px;
+  color: #334155;
+  font-weight: 500;
+}
+.perf-estimate strong { color: var(--primary); }
+.perf-strip.is-free {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}

@@ -12,6 +12,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Tạo Gemini API Key miễn phí tại aistudio.google.com/apikey ↗",
     defaultModel: "gemini-3.8-flash",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["gemini-3.8-flash", "gemini-4-hydrogen"],
+      balanced: ["gemini-3.8-flash", "gemini-4-hydrogen", "gemini-4-argon"],
+      quality: ["gemini-4-argon", "gemini-4-carbon", "gemini-3.8-flash"]
+    },
     models: [
       { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Khuyên dùng · Nhanh & 1M context)" },
       { id: "gemini-4-hydrogen", label: "Gemini 4 Hydrogen (Thế hệ 4 · Nhanh & hiệu quả)" },
@@ -31,6 +36,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại platform.openai.com ↗",
     defaultModel: "gpt-4o-mini",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["gpt-6.1-terra", "gpt-4o-mini", "gpt-5-nano", "gpt-6-luna"],
+      balanced: ["gpt-6.2-sol", "gpt-5-mini", "gpt-4o-mini", "gpt-4.1-mini"],
+      quality: ["gpt-6.2-astra", "gpt-5", "gpt-4o", "gpt-6.2-sol"]
+    },
     models: [
       { id: "gpt-6.2-astra", label: "GPT-6.2 Astra (Cao cấp nhất · Suy luận sâu)" },
       { id: "gpt-6.2-sol", label: "GPT-6.2 Sol (Cân bằng hiệu năng & chi phí)" },
@@ -62,6 +72,11 @@ const AI_PROVIDERS = {
     defaultModel: "google/gemini-3.8-flash",
     canFetchLiveModels: true,
     publicModelsEndpoint: true,
+    autoTiers: {
+      speed: ["google/gemini-3.8-flash", "deepseek/deepseek-chat-v3-0324:free", "meta-llama/llama-3.3-70b-instruct:free"],
+      balanced: ["google/gemini-3.8-flash", "openai/gpt-6.2-sol", "deepseek/deepseek-flash", "openrouter/auto"],
+      quality: ["anthropic/claude-sonnet-5-5", "google/gemini-4-argon", "openai/gpt-6.2-sol", "anthropic/claude-opus-5-5"]
+    },
     models: [
       { id: "google/gemini-3.8-flash", label: "Google: Gemini 3.8 Flash" },
       { id: "google/gemini-4-hydrogen", label: "Google: Gemini 4 Hydrogen" },
@@ -99,6 +114,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại console.anthropic.com ↗",
     defaultModel: "claude-sonnet-5-5",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["claude-haiku-5-5", "claude-haiku-4-5", "claude-3-5-haiku-latest"],
+      balanced: ["claude-sonnet-5-5", "claude-sonnet-4-5", "claude-haiku-5-5"],
+      quality: ["claude-opus-5-5", "claude-fable-5-2", "claude-sonnet-5-5"]
+    },
     models: [
       { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5 (Cân bằng · Khuyên dùng)" },
       { id: "claude-opus-5-5", label: "Claude Opus 5.5 (Chuyên sâu mạnh nhất)" },
@@ -124,6 +144,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại platform.deepseek.com ↗",
     defaultModel: "deepseek-flash",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["deepseek-flash", "deepseek-chat"],
+      balanced: ["deepseek-flash", "deepseek-v4-pro", "deepseek-chat"],
+      quality: ["deepseek-v4-pro", "deepseek-reasoner", "deepseek-flash"]
+    },
     models: [
       { id: "deepseek-flash", label: "DeepSeek V4.1 Flash (Mới nhất · 1M context)" },
       { id: "deepseek-v4-pro", label: "DeepSeek V4 Pro (Suy luận học thuật sâu)" },
@@ -142,6 +167,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Tạo Groq API Key miễn phí tại console.groq.com/keys ↗",
     defaultModel: "llama-3.3-70b-versatile",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["llama-3.1-8b-instant", "meta-llama/llama-4-scout-17b-16e-instruct", "gemma2-9b-it"],
+      balanced: ["llama-3.3-70b-versatile", "meta-llama/llama-4-maverick-17b-128e-instruct", "llama-3.1-8b-instant"],
+      quality: ["meta-llama/llama-4-maverick-17b-128e-instruct", "qwen/qwen3-32b", "deepseek-r1-distill-llama-70b", "llama-3.3-70b-versatile"]
+    },
     models: [
       { id: "llama-3.3-70b-versatile", label: "Llama 3.3 70B Versatile (Khuyên dùng)" },
       { id: "llama-3.1-8b-instant", label: "Llama 3.1 8B Instant (Siêu nhanh)" },
@@ -166,6 +196,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại console.x.ai ↗",
     defaultModel: "grok-4.7",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["grok-4-fast", "grok-3-mini"],
+      balanced: ["grok-4.7", "grok-4-fast", "grok-4"],
+      quality: ["grok-4.7", "grok-420-reasoning", "grok-4"]
+    },
     models: [
       { id: "grok-4.7", label: "Grok 4.7 (Flagship mới nhất · 500K context)" },
       { id: "grok-420-reasoning", label: "Grok 420 Reasoning (Suy luận sâu)" },
@@ -186,6 +221,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại console.mistral.ai ↗",
     defaultModel: "mistral-small-4",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["ministral-3b-latest", "mistral-small-4", "ministral-8b-latest"],
+      balanced: ["mistral-small-4", "mistral-medium-latest", "mistral-large-4"],
+      quality: ["mistral-large-4", "mistral-large-latest", "magistral-medium-latest"]
+    },
     models: [
       { id: "mistral-small-4", label: "Mistral Small 4 (Mới nhất · Tiết kiệm)" },
       { id: "mistral-large-4", label: "Mistral Large 4 (Flagship · 1M context)" },
@@ -210,6 +250,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại perplexity.ai/settings/api ↗",
     defaultModel: "sonar",
     canFetchLiveModels: false,
+    autoTiers: {
+      speed: ["sonar", "sonar-pro"],
+      balanced: ["sonar", "sonar-pro", "sonar-reasoning"],
+      quality: ["sonar-pro", "sonar-deep-research", "sonar-reasoning-pro"]
+    },
     models: [
       { id: "sonar", label: "Sonar (Nhanh · Có tìm kiếm web)" },
       { id: "sonar-pro", label: "Sonar Pro (Phân tích sâu)" },
@@ -229,6 +274,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại Alibaba Cloud Model Studio ↗",
     defaultModel: "qwen3.6-flash",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["qwen3.6-flash", "qwen3.8-flash", "qwen-turbo"],
+      balanced: ["qwen3.6-plus", "qwen3.6-flash", "qwen-plus"],
+      quality: ["qwen3.8-max", "qwen3.6-plus", "qwq-plus"]
+    },
     models: [
       { id: "qwen3.6-flash", label: "Qwen 3.6 Flash (Nhanh & tiết kiệm)" },
       { id: "qwen3.6-plus", label: "Qwen 3.6 Plus (Cân bằng · 1M context)" },
@@ -251,6 +301,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại platform.moonshot.ai ↗",
     defaultModel: "kimi-k3",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["moonshot-v1-8k", "kimi-k2.6", "kimi-k3"],
+      balanced: ["kimi-k3", "kimi-k2.6", "moonshot-v1-32k"],
+      quality: ["kimi-k3.1-pro", "kimi-k3", "kimi-k2-thinking"]
+    },
     models: [
       { id: "kimi-k3.1-pro", label: "Kimi K3.1 Pro (Flagship · 1M context)" },
       { id: "kimi-k3", label: "Kimi K3" },
@@ -273,6 +328,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại z.ai ↗",
     defaultModel: "glm-5.3-flash",
     canFetchLiveModels: false,
+    autoTiers: {
+      speed: ["glm-4.5-flash", "glm-5.3-flash", "glm-4-flash"],
+      balanced: ["glm-5.3-flash", "glm-5.2", "glm-4.5"],
+      quality: ["glm-5.3", "glm-5.2", "glm-5.3-flash"]
+    },
     models: [
       { id: "glm-5.3-flash", label: "GLM 5.3 Flash (Nhanh & tiết kiệm)" },
       { id: "glm-5.3", label: "GLM 5.3 (Flagship · 1M context)" },
@@ -295,6 +355,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại dashboard.cohere.com ↗",
     defaultModel: "command-a-plus-05-2026",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["command-r7b-12-2024", "command-r"],
+      balanced: ["command-a-plus-05-2026", "command-a-03-2025", "command-r"],
+      quality: ["command-a-plus-05-2026", "command-a-reasoning-08-2025", "command-r-plus"]
+    },
     models: [
       { id: "command-a-plus-05-2026", label: "Command A+ (Mới nhất · Dịch & Tổng hợp mạnh)" },
       { id: "command-a-03-2025", label: "Command A" },
@@ -315,6 +380,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại api.together.xyz ↗",
     defaultModel: "meta-llama/Llama-3.3-70B-Instruct-Turbo",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["mistralai/Mistral-Small-24B-Instruct-2501", "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", "meta-llama/Llama-3.3-70B-Instruct-Turbo"],
+      balanced: ["meta-llama/Llama-3.3-70B-Instruct-Turbo", "deepseek-ai/DeepSeek-V3", "zai-org/GLM-5.2"],
+      quality: ["Qwen/Qwen3-235B-A22B-Instruct-2507-tput", "deepseek-ai/DeepSeek-V3", "moonshotai/kimi-k3.1-pro"]
+    },
     models: [
       { id: "meta-llama/Llama-3.3-70B-Instruct-Turbo", label: "Llama 3.3 70B Instruct Turbo" },
       { id: "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8", label: "Llama 4 Maverick 17B FP8" },
@@ -337,6 +407,11 @@ const AI_PROVIDERS = {
     keyLinkLabel: "Lấy API Key tại fireworks.ai ↗",
     defaultModel: "accounts/fireworks/models/deepseek-v3",
     canFetchLiveModels: true,
+    autoTiers: {
+      speed: ["accounts/fireworks/models/llama4-maverick-instruct-basic", "accounts/fireworks/models/llama-v3p3-70b-instruct"],
+      balanced: ["accounts/fireworks/models/deepseek-v3", "accounts/fireworks/models/llama-v3p3-70b-instruct"],
+      quality: ["accounts/fireworks/models/deepseek-v3", "accounts/fireworks/models/qwen3-235b-a22b", "accounts/fireworks/models/deepseek-r1"]
+    },
     models: [
       { id: "accounts/fireworks/models/deepseek-v3", label: "DeepSeek V3" },
       { id: "accounts/fireworks/models/deepseek-r1", label: "DeepSeek R1" },
@@ -357,6 +432,11 @@ const AI_PROVIDERS = {
     defaultModel: "qwen2.5:7b",
     canFetchLiveModels: true,
     optionalKey: true,
+    autoTiers: {
+      speed: ["qwen2.5:7b", "qwen3:8b", "deepseek-r1:8b"],
+      balanced: ["qwen3:8b", "qwen2.5:7b", "gemma3:12b"],
+      quality: ["llama3.3:70b", "gemma3:12b", "qwen3:8b"]
+    },
     models: [
       { id: "qwen2.5:7b", label: "Ollama: qwen2.5:7b" },
       { id: "qwen3:8b", label: "Ollama: qwen3:8b" },
@@ -377,12 +457,14 @@ let liveModelsCache = {}; // { providerId: [{ id, label }, ...] }
 let settings = {
   analysisMode: "api", // "api" | "free"
   provider: "gemini",
-  model: "gemini-3.8-flash",
+  model: "auto",
+  autoProfile: "balanced", // "balanced" | "speed" | "quality"
   apiKey: "",
   customBaseUrl: "http://localhost:11434/v1",
   email: ""
 };
 let stopAiFlag = false;
+let activeAbortController = null;
 let localTranslateServerAvailable = null; // null = chưa kiểm tra, true/false = đã kiểm tra
 
 try {
@@ -427,6 +509,9 @@ if (!AI_PROVIDERS[settings.provider]) {
 }
 if (!["api", "free"].includes(settings.analysisMode)) {
   settings.analysisMode = "api";
+}
+if (!["balanced", "speed", "quality"].includes(settings.autoProfile)) {
+  settings.autoProfile = "balanced";
 }
 // Tự động nâng cấp model Gemini cũ (< 3.8) đã lưu từ trước sang gemini-3.8-flash
 if (settings.provider === "gemini" && isDeprecatedGeminiModel(settings.model)) {
@@ -571,22 +656,25 @@ function populateModelsForProvider(providerId, preferredModel = "") {
   const fetchHint = document.getElementById("modelFetchStatus");
 
   if (selectEl) {
+    const autoOptionHtml = `<option value="auto">★ Auto — Tự chọn model tối ưu theo yêu cầu</option>`;
     const optionsHtml = models
       .map((m) => `<option value="${escapeHtml(m.id)}">${escapeHtml(m.id)}${m.label && m.label !== m.id ? " — " + escapeHtml(m.label) : ""}</option>`)
       .join("");
-    selectEl.innerHTML = optionsHtml + `<option value="__custom__">-- Nhập mã model tùy chỉnh ở ô bên dưới --</option>`;
+    selectEl.innerHTML = autoOptionHtml + optionsHtml + `<option value="__custom__">-- Nhập mã model tùy chỉnh ở ô bên dưới --</option>`;
 
-    const targetModel = preferredModel || cfg.defaultModel;
-    if (models.some((m) => m.id === targetModel)) {
+    const targetModel = preferredModel || "auto";
+    if (targetModel.toLowerCase() === "auto") {
+      selectEl.value = "auto";
+    } else if (models.some((m) => m.id === targetModel)) {
       selectEl.value = targetModel;
     } else if (preferredModel) {
       selectEl.value = "__custom__";
     } else {
-      selectEl.value = models[0]?.id || "__custom__";
+      selectEl.value = "auto";
     }
 
     if (modelInput) {
-      modelInput.value = targetModel || models[0]?.id || "";
+      modelInput.value = targetModel || "auto";
     }
   }
 
@@ -736,14 +824,144 @@ function loadSettingsUI() {
   const apiKeyEl = document.getElementById("aiApiKey");
   const customUrlEl = document.getElementById("customBaseUrl");
   const emailEl = document.getElementById("userEmail");
+  const autoProfileEl = document.getElementById("aiAutoProfile");
 
   const providerId = AI_PROVIDERS[settings.provider] ? settings.provider : "gemini";
   if (providerEl) providerEl.value = providerId;
   if (apiKeyEl) apiKeyEl.value = settings.apiKey || "";
   if (customUrlEl) customUrlEl.value = settings.customBaseUrl || "http://localhost:11434/v1";
   if (emailEl) emailEl.value = settings.email || "";
+  if (autoProfileEl) autoProfileEl.value = settings.autoProfile || "balanced";
 
-  populateModelsForProvider(providerId, settings.model || AI_PROVIDERS[providerId].defaultModel);
+  populateModelsForProvider(providerId, settings.model || "auto");
+  updatePerfEstimateUI();
+}
+
+function isAutoModelSelected() {
+  return (settings.model || "auto").trim().toLowerCase() === "auto";
+}
+
+function resolveAutoModelPlan(providerId, targets = [], profileOverride = null) {
+  const cfg = AI_PROVIDERS[providerId] || AI_PROVIDERS.gemini;
+  const profile = profileOverride || settings.autoProfile || "balanced";
+  const count = Array.isArray(targets) ? targets.length : 0;
+  const avgAbstractLen =
+    count > 0
+      ? Math.round(targets.reduce((acc, p) => acc + (p.abstract || "").length, 0) / count)
+      : 1000;
+
+  if (!isAutoModelSelected()) {
+    const fixedModel = (settings.model || cfg.defaultModel).trim() || cfg.defaultModel;
+    return {
+      isAuto: false,
+      profile,
+      tier: "manual",
+      primaryModel: fixedModel,
+      candidateModels: [fixedModel],
+      batchSize: 3,
+      maxAbstractChars: 1600
+    };
+  }
+
+  let tier = "balanced";
+  let batchSize = 4;
+  let maxAbstractChars = 1500;
+
+  if (profile === "speed") {
+    tier = "speed";
+    batchSize = 5;
+    maxAbstractChars = 1200;
+  } else if (profile === "quality") {
+    tier = "quality";
+    batchSize = 2;
+    maxAbstractChars = 2200;
+  } else {
+    if (count > 0 && count <= 4 && avgAbstractLen >= 900) {
+      tier = "quality";
+      batchSize = 2;
+      maxAbstractChars = 2000;
+    } else if (count >= 12) {
+      tier = "speed";
+      batchSize = 5;
+      maxAbstractChars = 1300;
+    } else {
+      tier = "balanced";
+      batchSize = 4;
+      maxAbstractChars = 1500;
+    }
+  }
+
+  const tiers = cfg.autoTiers || {};
+  const tierOrder = [
+    ...(tiers[tier] || []),
+    ...(tiers.balanced || []),
+    ...(tiers.speed || []),
+    ...(tiers.quality || []),
+    cfg.defaultModel
+  ];
+  const liveIds = (Array.isArray(liveModelsCache[cfg.id]) ? liveModelsCache[cfg.id] : []).map((m) => m.id);
+  const candidateModels = [...new Set([...tierOrder, ...liveIds].filter(Boolean))].slice(0, 6);
+
+  return {
+    isAuto: true,
+    profile,
+    tier,
+    primaryModel: candidateModels[0] || cfg.defaultModel,
+    candidateModels,
+    batchSize,
+    maxAbstractChars
+  };
+}
+
+function updatePerfEstimateUI() {
+  const chkAuto = document.getElementById("chkTab3AutoModel");
+  const profileSel = document.getElementById("tab3AutoProfile");
+  const strip = document.getElementById("tab3PerfStrip");
+  const estEl = document.getElementById("tab3PerfEstimate");
+
+  const isAuto = isAutoModelSelected();
+  const isFree = settings.analysisMode === "free";
+
+  if (chkAuto) {
+    chkAuto.checked = isAuto;
+    chkAuto.disabled = isFree;
+  }
+  if (profileSel) {
+    profileSel.value = settings.autoProfile || "balanced";
+    profileSel.disabled = isFree || !isAuto;
+  }
+  if (strip) {
+    strip.classList.toggle("is-free", isFree);
+  }
+
+  if (!estEl) return;
+
+  const overwrite = document.getElementById("chkOverwriteMatrix")?.checked ?? true;
+  const selectedWithAbstract = papers.filter((p) => p.selected && p.abstract);
+  const targets = overwrite
+    ? selectedWithAbstract
+    : selectedWithAbstract.filter((p) => !hasAnalyzedMatrix(p));
+
+  if (isFree) {
+    const estCalls = targets.length;
+    estEl.innerHTML =
+      targets.length > 0
+        ? `Chế độ miễn phí: <strong>${targets.length} bài</strong> · gộp 1 lần dịch/bài, chạy song song 3 luồng (~<strong>${estCalls}</strong> yêu cầu, 0 API token)`
+        : `Chế độ miễn phí: <strong>0 API token</strong> · Gộp dịch 1 lần/bài &amp; song song 3 luồng.`;
+    return;
+  }
+
+  const plan = resolveAutoModelPlan(settings.provider, targets);
+  if (targets.length === 0) {
+    estEl.innerHTML = plan.isAuto
+      ? `Auto đang chọn sẵn: <strong>${escapeHtml(plan.primaryModel)}</strong> (gộp ${plan.batchSize} bài/lần gọi để tiết kiệm token)`
+      : `Model cố định: <strong>${escapeHtml(plan.primaryModel)}</strong> (gộp ${plan.batchSize} bài/lần gọi)`;
+    return;
+  }
+
+  const batchCalls = Math.ceil(targets.length / plan.batchSize);
+  const savedCallsPct = Math.max(0, Math.round((1 - batchCalls / targets.length) * 100));
+  estEl.innerHTML = `${plan.isAuto ? "Auto chọn" : "Model"}: <strong>${escapeHtml(plan.primaryModel)}</strong> · ${targets.length} bài → <strong>${batchCalls} lần gọi API</strong> (giảm ~${savedCallsPct}% lệnh gọi &amp; tối ưu token)`;
 }
 
 function persistSettings() {
@@ -789,8 +1007,10 @@ function syncAnalysisModeUI() {
     const keyBadge = hasKey
       ? `<span style="color:#047857;font-weight:700;">● Đã sẵn sàng</span>`
       : `<span style="color:#b45309;font-weight:700;">● Chưa nhập API Key</span>`;
+    const plan = resolveAutoModelPlan(cfg.id, papers.filter((p) => p.selected && p.abstract));
+    const modelLabel = plan.isAuto ? `Auto → ${plan.primaryModel}` : plan.primaryModel;
     apiHint.innerHTML = `
-      <span>Đang cấu hình: <strong>${escapeHtml(cfg.shortName)}</strong> · <code>${escapeHtml(settings.model || cfg.defaultModel)}</code> · ${keyBadge}</span>
+      <span>Đang cấu hình: <strong>${escapeHtml(cfg.shortName)}</strong> · <code>${escapeHtml(modelLabel)}</code> · ${keyBadge}</span>
       <button type="button" class="link-jump" id="btnJumpToSettings">Đổi cấu hình Tab 4 →</button>
     `;
     document.getElementById("btnJumpToSettings")?.addEventListener("click", (evt) => {
@@ -798,6 +1018,8 @@ function syncAnalysisModeUI() {
       switchToTab("tab-settings");
     });
   }
+
+  updatePerfEstimateUI();
 }
 
 function savePapers() {
@@ -816,9 +1038,17 @@ function sleep(ms) {
 // ==========================================
 // EVENT BINDINGS
 // ==========================================
+function debounce(fn, delayMs = 180) {
+  let timer = null;
+  return (...args) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delayMs);
+  };
+}
+
 function bindEvents() {
   document.getElementById("btnRunSearch")?.addEventListener("click", runOpenAlexSearch);
-  document.getElementById("filterText")?.addEventListener("input", renderPapersTable);
+  document.getElementById("filterText")?.addEventListener("input", debounce(renderPapersTable, 180));
   document.getElementById("filterQuartile")?.addEventListener("change", renderPapersTable);
   document.getElementById("filterSelected")?.addEventListener("change", renderPapersTable);
 
@@ -895,13 +1125,41 @@ function bindEvents() {
   document.getElementById("btnRunAiMatrix")?.addEventListener("click", runAiMatrixAnalysis);
   document.getElementById("btnStopAi")?.addEventListener("click", () => {
     stopAiFlag = true;
+    if (activeAbortController) {
+      try {
+        activeAbortController.abort();
+      } catch (_) {}
+    }
+  });
+  document.getElementById("chkOverwriteMatrix")?.addEventListener("change", updatePerfEstimateUI);
+
+  // Tab 3 Auto Model quick controls
+  document.getElementById("chkTab3AutoModel")?.addEventListener("change", (e) => {
+    const cfg = AI_PROVIDERS[settings.provider] || AI_PROVIDERS.gemini;
+    const nextModel = e.target.checked ? "auto" : cfg.defaultModel;
+    settings.model = nextModel;
+    persistSettings();
+    populateModelsForProvider(cfg.id, nextModel);
+    syncAnalysisModeUI();
+  });
+  document.getElementById("tab3AutoProfile")?.addEventListener("change", (e) => {
+    settings.autoProfile = e.target.value;
+    const tab4Profile = document.getElementById("aiAutoProfile");
+    if (tab4Profile) tab4Profile.value = settings.autoProfile;
+    persistSettings();
+    syncAnalysisModeUI();
   });
 
   // Settings — Provider & Model Auto-Jump
   document.getElementById("aiProvider")?.addEventListener("change", (e) => {
     const nextProvider = e.target.value;
     const cfg = AI_PROVIDERS[nextProvider] || AI_PROVIDERS.gemini;
-    populateModelsForProvider(cfg.id, cfg.defaultModel);
+    const keepAuto = isAutoModelSelected() ? "auto" : cfg.defaultModel;
+    settings.provider = cfg.id;
+    settings.model = keepAuto;
+    persistSettings();
+    populateModelsForProvider(cfg.id, keepAuto);
+    syncAnalysisModeUI();
 
     // Tự tải toàn bộ danh sách công khai của OpenRouter khi người dùng chọn lần đầu
     if (cfg.publicModelsEndpoint && (!liveModelsCache[cfg.id] || liveModelsCache[cfg.id].length === 0)) {
@@ -914,18 +1172,34 @@ function bindEvents() {
     const modelInput = document.getElementById("aiModel");
     if (val !== "__custom__" && modelInput) {
       modelInput.value = val;
+      settings.model = val;
+      persistSettings();
+      syncAnalysisModeUI();
     } else if (val === "__custom__" && modelInput) {
       modelInput.focus();
       modelInput.select();
     }
   });
 
+  document.getElementById("aiAutoProfile")?.addEventListener("change", (e) => {
+    settings.autoProfile = e.target.value;
+    persistSettings();
+    syncAnalysisModeUI();
+  });
+
   document.getElementById("aiModel")?.addEventListener("input", (e) => {
     const typed = e.target.value.trim();
     const selectEl = document.getElementById("aiModelSelect");
     if (!selectEl) return;
-    const hasMatch = [...selectEl.options].some((opt) => opt.value === typed);
-    selectEl.value = hasMatch ? typed : "__custom__";
+    const lower = typed.toLowerCase();
+    if (lower === "auto") {
+      selectEl.value = "auto";
+    } else {
+      const hasMatch = [...selectEl.options].some((opt) => opt.value === typed);
+      selectEl.value = hasMatch ? typed : "__custom__";
+    }
+    settings.model = typed || "auto";
+    syncAnalysisModeUI();
   });
 
   document.getElementById("btnFetchModels")?.addEventListener("click", () => {
@@ -953,7 +1227,9 @@ function bindEvents() {
 function readSettingsFromForm() {
   const provider = document.getElementById("aiProvider")?.value || "gemini";
   const cfg = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
-  const model = (document.getElementById("aiModel")?.value || cfg.defaultModel).trim();
+  const rawModel = (document.getElementById("aiModel")?.value || "auto").trim();
+  const model = rawModel.toLowerCase() === "auto" ? "auto" : rawModel || "auto";
+  const autoProfile = document.getElementById("aiAutoProfile")?.value || settings.autoProfile || "balanced";
   const apiKey = (document.getElementById("aiApiKey")?.value || "").trim();
   const customBaseUrl = (document.getElementById("customBaseUrl")?.value || cfg.baseUrl || "").trim();
   const email = (document.getElementById("userEmail")?.value || "").trim();
@@ -961,7 +1237,8 @@ function readSettingsFromForm() {
   return {
     ...settings,
     provider: cfg.id,
-    model: model || cfg.defaultModel,
+    model,
+    autoProfile,
     apiKey,
     customBaseUrl: customBaseUrl || "http://localhost:11434/v1",
     email
@@ -975,7 +1252,9 @@ function saveSettingsFromForm() {
   const statusEl = document.getElementById("settingsStatus");
   if (statusEl) {
     const cfg = AI_PROVIDERS[settings.provider] || AI_PROVIDERS.gemini;
-    statusEl.textContent = `Đã lưu cấu hình (${cfg.shortName} · ${settings.model}) thành công!`;
+    const plan = resolveAutoModelPlan(cfg.id, []);
+    const modelDesc = plan.isAuto ? `Auto (${plan.primaryModel})` : plan.primaryModel;
+    statusEl.textContent = `Đã lưu cấu hình (${cfg.shortName} · ${modelDesc}) thành công!`;
   }
 }
 
@@ -994,21 +1273,35 @@ async function testAiConnection() {
   persistSettings();
   syncAnalysisModeUI();
 
-  if (btn) btn.disabled = true;
-  if (statusEl) statusEl.textContent = `Đang kiểm tra kết nối tới ${cfg.shortName} (${draft.model})...`;
+  const samplePaper = {
+    id: "__test__",
+    title: "Corporate Carbon Disclosure and Firm Value",
+    abstract:
+      "This study examines the impact of corporate carbon disclosure on firm value using panel data from 200 listed firms between 2018 and 2023. The findings show a positive association, while future research should investigate private firms."
+  };
+  const plan = resolveAutoModelPlan(cfg.id, [samplePaper], draft.autoProfile);
 
+  if (btn) btn.disabled = true;
+  if (statusEl) {
+    statusEl.textContent = `Đang kiểm tra kết nối tới ${cfg.shortName} (${plan.isAuto ? "Auto → " + plan.primaryModel : plan.primaryModel})...`;
+  }
+
+  const startedAt = Date.now();
   try {
-    const samplePaper = {
-      title: "Corporate Carbon Disclosure and Firm Value",
-      abstract:
-        "This study examines the impact of corporate carbon disclosure on firm value using panel data from 200 listed firms between 2018 and 2023. The findings show a positive association, while future research should investigate private firms."
-    };
-    const result = await callAiExtractMatrix(samplePaper);
-    if (!result || (!result.summary && !result.findings)) {
+    const res = await callAiBatchWithRetryAndFallback(
+      [samplePaper],
+      plan.candidateModels,
+      plan.maxAbstractChars,
+      statusEl,
+      "Kiểm tra"
+    );
+    const first = res.items?.[0];
+    if (!first || (!first.summary && !first.findings)) {
       throw new Error("Phản hồi không đúng cấu trúc JSON mong đợi.");
     }
+    const elapsedMs = Date.now() - startedAt;
     if (statusEl) {
-      statusEl.textContent = `Kết nối thành công với ${cfg.shortName} (${draft.model})! Sẵn sàng chạy Trường hợp 1.`;
+      statusEl.textContent = `Kết nối thành công với ${cfg.shortName} (${res.usedModel}) trong ${elapsedMs}ms! (~${res.totalTokens || "?"} tokens)`;
     }
   } catch (err) {
     console.error(err);
@@ -1023,6 +1316,29 @@ async function testAiConnection() {
 // ==========================================
 // 1. OPENALEX SEARCH & DEDUPLICATION
 // ==========================================
+async function fetchWithTimeout(url, options = {}, timeoutMs = 25000, externalSignal = null) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error(`Quá thời gian chờ (${Math.round(timeoutMs / 1000)}s)`)), timeoutMs);
+  const onExternalAbort = () => controller.abort(new Error("Đã hủy bởi người dùng"));
+
+  if (externalSignal) {
+    if (externalSignal.aborted) {
+      clearTimeout(timer);
+      throw new Error("Đã hủy bởi người dùng");
+    }
+    externalSignal.addEventListener("abort", onExternalAbort, { once: true });
+  }
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", onExternalAbort);
+    }
+  }
+}
+
 async function runOpenAlexSearch() {
   const queryInput = document.getElementById("searchQuery");
   const query = (queryInput?.value || "").trim();
@@ -1034,7 +1350,7 @@ async function runOpenAlexSearch() {
   const yearFrom = document.getElementById("yearFrom")?.value || "2020";
   const yearTo = document.getElementById("yearTo")?.value || "2026";
   const maxResults = parseInt(document.getElementById("maxResults")?.value || "100", 10);
-  const sortBy = document.getElementById("sortBy")?.value || "cited_by_count:desc";
+  const sortBy = document.getElementById("sortBy")?.value || "relevance_score:desc";
   const minCitations = parseInt(document.getElementById("minCitations")?.value || "0", 10);
   const onlyOA = document.getElementById("onlyOpenAccess")?.value === "oa";
   const lang = document.getElementById("searchLanguage")?.value || "ALL";
@@ -1042,28 +1358,41 @@ async function runOpenAlexSearch() {
   const statusEl = document.getElementById("searchStatus");
   const btn = document.getElementById("btnRunSearch");
   if (btn) btn.disabled = true;
-  if (statusEl) statusEl.textContent = "Đang kết nối OpenAlex API...";
+  if (statusEl) statusEl.textContent = "Đang kết nối OpenAlex API (chế độ tải nhanh)...";
 
+  const startedAt = Date.now();
   let fetched = [];
   let cursor = "*";
-  const perPage = 100;
   let stoppedByLimit = false;
+  const selectFields =
+    "id,doi,title,publication_year,authorships,primary_location,open_access,cited_by_count,abstract_inverted_index";
 
   try {
     while (fetched.length < maxResults && cursor) {
+      const remaining = maxResults - fetched.length;
+      const perPage = Math.min(200, Math.max(25, remaining));
       const filters = [`publication_year:${yearFrom}-${yearTo}`, "type:article"];
       if (minCitations > 0) filters.push(`cited_by_count:>${minCitations - 1}`);
       if (onlyOA) filters.push("is_oa:true");
       if (lang !== "ALL") filters.push(`language:${lang}`);
 
-      let url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&filter=${filters.join(",")}&sort=${sortBy}&per-page=${perPage}&cursor=${encodeURIComponent(cursor)}`;
+      let url = `https://api.openalex.org/works?search=${encodeURIComponent(query)}&filter=${filters.join(",")}&sort=${sortBy}&per-page=${perPage}&select=${selectFields}&cursor=${encodeURIComponent(cursor)}`;
       if (settings.email) url += `&mailto=${encodeURIComponent(settings.email)}`;
 
-      let res = await fetch(url);
-      if (res.status === 429) {
-        if (statusEl) statusEl.textContent = "OpenAlex giới hạn tạm thời (HTTP 429), đang đợi 5 giây thử lại...";
-        await sleep(5000);
-        res = await fetch(url);
+      let res = null;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        res = await fetchWithTimeout(url, {}, 25000);
+        if (res.status === 429 || res.status >= 500) {
+          if (attempt < 2) {
+            const waitMs = res.status === 429 ? 3500 * (attempt + 1) : 1500 * (attempt + 1);
+            if (statusEl) {
+              statusEl.textContent = `OpenAlex phản hồi HTTP ${res.status}, tự thử lại sau ${(waitMs / 1000).toFixed(1)}s...`;
+            }
+            await sleep(waitMs);
+            continue;
+          }
+        }
+        break;
       }
 
       if (!res.ok) {
@@ -1134,10 +1463,11 @@ async function runOpenAlexSearch() {
     savePapers();
     renderPapersTable();
     renderMatrixTable();
+    const elapsedSec = ((Date.now() - startedAt) / 1000).toFixed(1);
     if (statusEl) {
       statusEl.textContent = stoppedByLimit
-        ? `Hoàn tất một phần! Thu được ${papers.length} bài (do giới hạn tần suất/phân trang của OpenAlex).`
-        : `Hoàn tất! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
+        ? `Hoàn tất một phần trong ${elapsedSec}s! Thu được ${papers.length} bài (do giới hạn tần suất/phân trang của OpenAlex).`
+        : `Hoàn tất trong ${elapsedSec}s! Thu được ${papers.length} bài báo sau khi lọc trùng.`;
     }
   } catch (err) {
     console.error(err);
@@ -1493,6 +1823,7 @@ function updateStats() {
   setText("statScopus", papers.filter((p) => p.scopusQuartile).length);
   setText("statSelected", selCount);
   setText("aiSelectedCount", selCount);
+  updatePerfEstimateUI();
 }
 
 // ==========================================
@@ -1570,20 +1901,34 @@ window.rerunSinglePaperMatrix = async function (id) {
   }
 
   const statusEl = document.getElementById("aiStatus");
-  if (statusEl) {
-    statusEl.textContent = `Đang chạy lại (${mode === "api" ? "AI API" : "Không API Key"}): ${paper.title.slice(0, 50)}...`;
-  }
+  const startedAt = Date.now();
+  stopAiFlag = false;
+  activeAbortController = new AbortController();
 
   try {
     if (mode === "api") {
-      const result = await callAiExtractMatrixWithRetry(paper, statusEl, 1, 1);
-      paper.aiSummary = result.summary || "";
-      paper.aiMethod = result.method || "";
-      paper.aiFindings = result.findings || "";
-      paper.aiGap = result.gap || "";
+      const plan = resolveAutoModelPlan(cfg.id, [paper]);
+      if (statusEl) {
+        statusEl.textContent = `Đang chạy lại (AI API · ${plan.isAuto ? "Auto → " + plan.primaryModel : plan.primaryModel}): ${paper.title.slice(0, 48)}...`;
+      }
+      const res = await callAiBatchWithRetryAndFallback(
+        [paper],
+        plan.candidateModels,
+        plan.maxAbstractChars,
+        statusEl,
+        "1/1"
+      );
+      const item = res.items?.[0] || {};
+      paper.aiSummary = item.summary || "";
+      paper.aiMethod = item.method || "";
+      paper.aiFindings = item.findings || "";
+      paper.aiGap = item.gap || "";
       paper.aiMode = "api";
-      paper.aiModelUsed = `${cfg.shortName} · ${settings.model}`;
+      paper.aiModelUsed = `${cfg.shortName} · ${plan.isAuto ? "Auto → " : ""}${res.usedModel}`;
     } else {
+      if (statusEl) {
+        statusEl.textContent = `Đang chạy lại (Không API Key): ${paper.title.slice(0, 50)}...`;
+      }
       const result = await analyzePaperFreeMode(paper);
       paper.aiSummary = result.summary;
       paper.aiMethod = result.method;
@@ -1594,15 +1939,22 @@ window.rerunSinglePaperMatrix = async function (id) {
     }
     savePapers();
     renderMatrixTable();
+    const sec = ((Date.now() - startedAt) / 1000).toFixed(1);
     if (statusEl) {
-      statusEl.textContent = `Đã cập nhật xong bài "${paper.title.slice(0, 48)}..." bằng chế độ ${mode === "api" ? "AI API" : "Không API Key"}.`;
+      statusEl.textContent = `Đã cập nhật xong "${paper.title.slice(0, 45)}..." trong ${sec}s (${mode === "api" ? "AI API" : "Không API Key"}).`;
     }
   } catch (err) {
+    if (err.name === "AbortError" || stopAiFlag) {
+      if (statusEl) statusEl.textContent = "Đã dừng phân tích.";
+      return;
+    }
     console.error(err);
     paper.aiSummary = `Lỗi AI: ${err.message}`;
     paper.aiMode = "";
     renderMatrixTable();
     if (statusEl) statusEl.textContent = `Lỗi khi chạy lại bài: ${err.message}`;
+  } finally {
+    activeAbortController = null;
   }
 };
 
@@ -1635,130 +1987,271 @@ async function runAiMatrixAnalysis() {
   }
 
   stopAiFlag = false;
+  activeAbortController = new AbortController();
   const btnRun = document.getElementById("btnRunAiMatrix");
   const btnStop = document.getElementById("btnStopAi");
   const statusEl = document.getElementById("aiStatus");
   if (btnRun) btnRun.disabled = true;
   if (btnStop) btnStop.disabled = false;
 
-  const delayBetweenCallsMs = mode === "api" ? 3000 : 250;
-  let translatedCount = 0;
-  let englishFallbackCount = 0;
+  const startedAt = Date.now();
 
-  for (let i = 0; i < targets.length; i++) {
-    if (stopAiFlag) {
-      if (statusEl) statusEl.textContent = `Đã dừng ở bài ${i}/${targets.length}.`;
-      break;
-    }
-
-    const p = targets[i];
-    const modeTag = mode === "api" ? `AI API · ${cfg.shortName}` : "Không API Key · Miễn phí";
-    if (statusEl) {
-      statusEl.textContent = `[${modeTag}] Đang phân tích bài ${i + 1}/${targets.length}: ${p.title.slice(0, 48)}...`;
-    }
-
-    try {
-      if (mode === "api") {
-        const result = await callAiExtractMatrixWithRetry(p, statusEl, i + 1, targets.length);
-        p.aiSummary = result.summary || "";
-        p.aiMethod = result.method || "";
-        p.aiFindings = result.findings || "";
-        p.aiGap = result.gap || "";
-        p.aiMode = "api";
-        p.aiModelUsed = `${cfg.shortName} · ${settings.model}`;
-      } else {
-        const result = await analyzePaperFreeMode(p);
-        p.aiSummary = result.summary;
-        p.aiMethod = result.method;
-        p.aiFindings = result.findings;
-        p.aiGap = result.gap;
-        p.aiMode = "free";
-        p.aiModelUsed = result.metaLabel;
-        if (result.translated) translatedCount++;
-        else englishFallbackCount++;
-      }
-      savePapers();
-      renderMatrixTable();
-    } catch (err) {
-      console.error(err);
-      p.aiSummary = `Lỗi AI: ${err.message}`;
-      p.aiMode = "";
-      renderMatrixTable();
-    }
-
-    if (i < targets.length - 1 && !stopAiFlag) {
-      if (mode === "api" && statusEl) {
-        statusEl.textContent = `Xong bài ${i + 1}/${targets.length}. Đang nghỉ 3 giây tránh giới hạn tốc độ API...`;
-      }
-      await sleep(delayBetweenCallsMs);
-    }
-  }
-
-  if (btnRun) btnRun.disabled = false;
-  if (btnStop) btnStop.disabled = true;
-  if (!stopAiFlag && statusEl) {
-    if (mode === "api") {
-      statusEl.textContent = `Hoàn tất phân tích chuyên sâu ${targets.length} bài bằng ${cfg.shortName} (${settings.model})!`;
-    } else if (englishFallbackCount > 0 && translatedCount === 0) {
-      statusEl.textContent = `Hoàn tất trích xuất miễn phí ${targets.length} bài (đang giữ nguyên tiếng Anh do ngoại tuyến/không gọi được dịch vụ dịch).`;
-    } else if (englishFallbackCount > 0) {
-      statusEl.textContent = `Hoàn tất miễn phí ${targets.length} bài (${translatedCount} bài đã dịch tiếng Việt, ${englishFallbackCount} bài giữ tiếng Anh).`;
-    } else {
-      statusEl.textContent = `Hoàn tất trích xuất & dịch tiếng Việt miễn phí ${targets.length} bài (Không cần API Key)!`;
-    }
-  }
-}
-
-// ==========================================
-// 4A. TRƯỜNG HỢP 1 — GỌI AI API ĐA NHÀ CUNG CẤP
-// ==========================================
-async function callAiExtractMatrixWithRetry(paper, statusEl, currentIdx, totalCount) {
   try {
-    return await callAiExtractMatrix(paper);
-  } catch (err) {
-    if (err.message.includes("429") && !stopAiFlag) {
-      if (statusEl) {
-        statusEl.textContent = `API tạm giới hạn tốc độ (429) ở bài ${currentIdx}/${totalCount}. Đang đợi 12 giây để tự thử lại...`;
+    if (mode === "api") {
+      const plan = resolveAutoModelPlan(cfg.id, targets);
+      let activeCandidates = [...plan.candidateModels];
+      let apiCalls = 0;
+      let totalTokens = 0;
+      let completedPapers = 0;
+      let adaptiveDelayMs = 300;
+      let lastUsedModel = plan.primaryModel;
+
+      const batches = [];
+      for (let i = 0; i < targets.length; i += plan.batchSize) {
+        batches.push(targets.slice(i, i + plan.batchSize));
       }
-      await sleep(12000);
-      if (!stopAiFlag) {
-        return await callAiExtractMatrix(paper);
+
+      for (let bIdx = 0; bIdx < batches.length; bIdx++) {
+        if (stopAiFlag) {
+          if (statusEl) statusEl.textContent = `Đã dừng ở lô ${bIdx}/${batches.length} (${completedPapers}/${targets.length} bài).`;
+          break;
+        }
+
+        const batch = batches[bIdx];
+        const batchLabel = `lô ${bIdx + 1}/${batches.length}`;
+        if (statusEl) {
+          statusEl.textContent = `[AI API · ${plan.isAuto ? "Auto → " : ""}${activeCandidates[0]}] Đang xử lý ${batchLabel} (${batch.length} bài)...`;
+        }
+
+        try {
+          const res = await callAiBatchWithRetryAndFallback(
+            batch,
+            activeCandidates,
+            plan.maxAbstractChars,
+            statusEl,
+            batchLabel
+          );
+          apiCalls += res.callsMade || 1;
+          totalTokens += res.totalTokens || 0;
+          lastUsedModel = res.usedModel || activeCandidates[0];
+          if (res.hadRateLimit) adaptiveDelayMs = 2500;
+
+          // Ưu tiên model vừa chạy thành công cho các lô tiếp theo
+          if (lastUsedModel && activeCandidates[0] !== lastUsedModel) {
+            activeCandidates = [lastUsedModel, ...activeCandidates.filter((m) => m !== lastUsedModel)];
+          }
+
+          for (let j = 0; j < batch.length; j++) {
+            const p = batch[j];
+            let item = res.items?.[j];
+            // Nếu model trả thiếu 1 mục trong batch, tự bù bằng 1 lời gọi đơn cho riêng bài thiếu
+            if ((!item || (!item.summary && !item.findings)) && !stopAiFlag) {
+              try {
+                const single = await callAiBatchWithRetryAndFallback(
+                  [p],
+                  activeCandidates,
+                  plan.maxAbstractChars,
+                  statusEl,
+                  `bù bài ${completedPapers + j + 1}`
+                );
+                apiCalls += single.callsMade || 1;
+                totalTokens += single.totalTokens || 0;
+                item = single.items?.[0];
+              } catch (_) {}
+            }
+
+            if (item && (item.summary || item.findings || item.method || item.gap)) {
+              p.aiSummary = item.summary || "";
+              p.aiMethod = item.method || "";
+              p.aiFindings = item.findings || "";
+              p.aiGap = item.gap || "";
+              p.aiMode = "api";
+              p.aiModelUsed = `${cfg.shortName} · ${plan.isAuto ? "Auto → " : ""}${lastUsedModel}`;
+            } else {
+              p.aiSummary = "Lỗi AI: Model không trả đủ trường cho bài này.";
+              p.aiMode = "";
+            }
+          }
+
+          completedPapers += batch.length;
+          savePapers();
+          renderMatrixTable();
+        } catch (err) {
+          if (err.name === "AbortError" || stopAiFlag) {
+            if (statusEl) statusEl.textContent = `Đã dừng (${completedPapers}/${targets.length} bài).`;
+            break;
+          }
+          console.error(err);
+          batch.forEach((p) => {
+            p.aiSummary = `Lỗi AI: ${err.message}`;
+            p.aiMode = "";
+          });
+          completedPapers += batch.length;
+          renderMatrixTable();
+        }
+
+        if (bIdx < batches.length - 1 && !stopAiFlag) {
+          await sleep(adaptiveDelayMs);
+        }
+      }
+
+      if (!stopAiFlag && statusEl) {
+        const sec = ((Date.now() - startedAt) / 1000).toFixed(1);
+        const tokenText = totalTokens > 0 ? ` · ~${totalTokens.toLocaleString("vi-VN")} tokens` : "";
+        statusEl.textContent = `Hoàn tất ${targets.length} bài trong ${sec}s · ${apiCalls} lần gọi API${tokenText} · Model: ${lastUsedModel}`;
+      }
+    } else {
+      // TRƯỜNG HỢP 2: CHẠY SONG SONG 3 LUỒNG + GỘP 1 LẦN DỊCH / BÀI
+      const CONCURRENCY = 3;
+      let nextIdx = 0;
+      let doneCount = 0;
+      let translatedCount = 0;
+      let englishFallbackCount = 0;
+
+      const worker = async () => {
+        while (!stopAiFlag) {
+          const idx = nextIdx++;
+          if (idx >= targets.length) break;
+          const p = targets[idx];
+          if (statusEl) {
+            statusEl.textContent = `[Miễn phí · 3 luồng] Đang xử lý ${Math.min(doneCount + 1, targets.length)}/${targets.length}: ${p.title.slice(0, 44)}...`;
+          }
+          try {
+            const result = await analyzePaperFreeMode(p);
+            p.aiSummary = result.summary;
+            p.aiMethod = result.method;
+            p.aiFindings = result.findings;
+            p.aiGap = result.gap;
+            p.aiMode = "free";
+            p.aiModelUsed = result.metaLabel;
+            if (result.translated) translatedCount++;
+            else englishFallbackCount++;
+          } catch (err) {
+            console.error(err);
+            p.aiSummary = `Lỗi trích xuất: ${err.message}`;
+            p.aiMode = "";
+          }
+          doneCount++;
+          savePapers();
+          renderMatrixTable();
+        }
+      };
+
+      const workerCount = Math.min(CONCURRENCY, targets.length);
+      await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+      if (stopAiFlag) {
+        if (statusEl) statusEl.textContent = `Đã dừng (${doneCount}/${targets.length} bài).`;
+      } else if (statusEl) {
+        const sec = ((Date.now() - startedAt) / 1000).toFixed(1);
+        if (englishFallbackCount > 0 && translatedCount === 0) {
+          statusEl.textContent = `Hoàn tất miễn phí ${targets.length} bài trong ${sec}s (giữ tiếng Anh do ngoại tuyến/không gọi được dịch).`;
+        } else if (englishFallbackCount > 0) {
+          statusEl.textContent = `Hoàn tất miễn phí ${targets.length} bài trong ${sec}s (${translatedCount} bài dịch VI, ${englishFallbackCount} bài giữ EN).`;
+        } else {
+          statusEl.textContent = `Hoàn tất trích xuất & dịch tiếng Việt miễn phí ${targets.length} bài trong ${sec}s (0 API token)!`;
+        }
       }
     }
-    throw err;
+  } finally {
+    activeAbortController = null;
+    if (btnRun) btnRun.disabled = false;
+    if (btnStop) btnStop.disabled = true;
   }
 }
 
-function buildMatrixPrompt(paper) {
-  return `Bạn là trợ lý nghiên cứu khoa học chuyên nghiệp. Hãy đọc tiêu đề và tóm tắt (Abstract) bài báo dưới đây, sau đó trả về DUY NHẤT một đối tượng JSON hợp lệ (không bọc markdown, không giải thích thêm) gồm đúng 4 trường bằng tiếng Việt học thuật, súc tích:
-{
-  "summary": "Tóm tắt mục tiêu và bối cảnh nghiên cứu trong 2-3 câu",
-  "method": "Phương pháp nghiên cứu, mô hình, biến số hoặc cỡ mẫu dữ liệu",
-  "findings": "Kết quả và phát hiện chính của nghiên cứu",
-  "gap": "Hạn chế hoặc khoảng trống nghiên cứu có thể khai thác tiếp"
+// ==========================================
+// 4A. TRƯỜNG HỢP 1 — GỌI AI API TỐI ƯU TOKEN, GOM LÔ & FALLBACK
+// ==========================================
+function trimAbstractForTokens(abstract, maxChars = 1500) {
+  const clean = cleanAbstractText(abstract);
+  if (!clean || clean.length <= maxChars) return clean;
+  const headLen = Math.floor(maxChars * 0.68);
+  const tailLen = Math.max(180, maxChars - headLen - 10);
+  let head = clean.slice(0, headLen);
+  const lastSpace = head.lastIndexOf(" ");
+  if (lastSpace > headLen * 0.7) head = head.slice(0, lastSpace);
+
+  let tail = clean.slice(clean.length - tailLen);
+  const firstSpace = tail.indexOf(" ");
+  if (firstSpace > 0 && firstSpace < tailLen * 0.3) tail = tail.slice(firstSpace + 1);
+  return `${head} [...] ${tail}`;
 }
 
-Tiêu đề: ${paper.title}
-Abstract: ${paper.abstract}`;
+function buildBatchMatrixPrompt(batch, maxAbstractChars = 1500) {
+  const papersBlock = batch
+    .map((p, idx) => `[#${idx}] ${p.title}\nAbs: ${trimAbstractForTokens(p.abstract, maxAbstractChars)}`)
+    .join("\n---\n");
+
+  return `Phân tích ${batch.length} bài báo sau. Trả về DUY NHẤT JSON hợp lệ (không markdown):
+{"items":[{"i":0,"s":"Tóm tắt mục tiêu 1-2 câu tiếng Việt học thuật","m":"Phương pháp, mô hình, cỡ mẫu","f":"Kết quả/phát hiện chính","g":"Hạn chế/khoảng trống nghiên cứu"}]}
+Đủ ${batch.length} phần tử i=0..${batch.length - 1}, súc tích.
+
+${papersBlock}`;
 }
 
 function parseAiJsonResponse(rawText) {
   let cleaned = (rawText || "").trim();
-  // Gỡ bỏ thẻ suy nghĩ của các reasoning models (DeepSeek R1, QwQ, v.v.)
   cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
-  // Gỡ bỏ markdown code fence nếu có
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
 
   try {
     return JSON.parse(cleaned);
   } catch (_) {
-    const start = cleaned.indexOf("{");
-    const end = cleaned.lastIndexOf("}");
-    if (start !== -1 && end !== -1 && end > start) {
-      return JSON.parse(cleaned.slice(start, end + 1));
+    const objStart = cleaned.indexOf("{");
+    const objEnd = cleaned.lastIndexOf("}");
+    const arrStart = cleaned.indexOf("[");
+    const arrEnd = cleaned.lastIndexOf("]");
+    if (objStart !== -1 && objEnd > objStart && (arrStart === -1 || objStart < arrStart)) {
+      return JSON.parse(cleaned.slice(objStart, objEnd + 1));
+    }
+    if (arrStart !== -1 && arrEnd > arrStart) {
+      return JSON.parse(cleaned.slice(arrStart, arrEnd + 1));
     }
     throw new Error("AI trả về dữ liệu không phải JSON hợp lệ.");
   }
+}
+
+function normalizeMatrixItem(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  return {
+    summary: String(raw.s ?? raw.summary ?? "").trim(),
+    method: String(raw.m ?? raw.method ?? "").trim(),
+    findings: String(raw.f ?? raw.findings ?? "").trim(),
+    gap: String(raw.g ?? raw.gap ?? "").trim()
+  };
+}
+
+function parseBatchAiResponse(rawText, expectedCount) {
+  const parsed = parseAiJsonResponse(rawText);
+  const out = new Array(expectedCount).fill(null);
+
+  if (Array.isArray(parsed)) {
+    parsed.forEach((item, idx) => {
+      const targetIdx = typeof item?.i === "number" ? item.i : idx;
+      if (targetIdx >= 0 && targetIdx < expectedCount) {
+        out[targetIdx] = normalizeMatrixItem(item);
+      }
+    });
+    return out;
+  }
+
+  if (parsed && Array.isArray(parsed.items)) {
+    parsed.items.forEach((item, idx) => {
+      const targetIdx = typeof item?.i === "number" ? item.i : idx;
+      if (targetIdx >= 0 && targetIdx < expectedCount) {
+        out[targetIdx] = normalizeMatrixItem(item);
+      }
+    });
+    return out;
+  }
+
+  if (parsed && typeof parsed === "object" && expectedCount === 1) {
+    out[0] = normalizeMatrixItem(parsed);
+    return out;
+  }
+
+  throw new Error("Cấu trúc JSON từ AI thiếu trường items.");
 }
 
 async function readErrorMessage(res, prefix) {
@@ -1772,55 +2265,92 @@ async function readErrorMessage(res, prefix) {
   }
 }
 
-async function callAiExtractMatrix(paper) {
+function parseRetryAfterMs(res) {
+  const header = res.headers?.get?.("retry-after");
+  if (!header) return 0;
+  const sec = parseFloat(header);
+  if (!Number.isNaN(sec) && sec > 0) return Math.min(15000, Math.max(2000, sec * 1000));
+  return 0;
+}
+
+async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
   const cfg = AI_PROVIDERS[settings.provider] || AI_PROVIDERS.gemini;
-  const model = (settings.model || cfg.defaultModel).trim();
-  const prompt = buildMatrixPrompt(paper);
+  const model = (modelOverride || cfg.defaultModel).trim();
+  const prompt = buildBatchMatrixPrompt(batch, maxAbstractChars);
+  const maxOutputTokens = Math.min(2800, 380 * batch.length + 220);
+  const signal = activeAbortController?.signal || null;
 
   if (cfg.protocol === "gemini") {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json" }
-      })
-    });
-    if (!res.ok) throw new Error(await readErrorMessage(res, "Gemini"));
+    const res = await fetchWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.2,
+            maxOutputTokens
+          }
+        })
+      },
+      45000,
+      signal
+    );
+    if (!res.ok) {
+      const err = new Error(await readErrorMessage(res, "Gemini"));
+      err.status = res.status;
+      err.retryAfterMs = parseRetryAfterMs(res);
+      throw err;
+    }
     const data = await res.json();
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-    return parseAiJsonResponse(rawText);
+    const items = parseBatchAiResponse(rawText, batch.length);
+    const totalTokens = data.usageMetadata?.totalTokenCount || 0;
+    return { items, totalTokens, usedModel: model };
   }
 
   if (cfg.protocol === "anthropic") {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": settings.apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
+    const res = await fetchWithTimeout(
+      "https://api.anthropic.com/v1/messages",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": settings.apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model,
+          max_tokens: maxOutputTokens,
+          temperature: 0.2,
+          messages: [{ role: "user", content: prompt }]
+        })
       },
-      body: JSON.stringify({
-        model,
-        max_tokens: 1200,
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
-    if (!res.ok) throw new Error(await readErrorMessage(res, "Anthropic"));
+      45000,
+      signal
+    );
+    if (!res.ok) {
+      const err = new Error(await readErrorMessage(res, "Anthropic"));
+      err.status = res.status;
+      err.retryAfterMs = parseRetryAfterMs(res);
+      throw err;
+    }
     const data = await res.json();
     const textBlock = (data.content || []).find((c) => c.type === "text");
-    return parseAiJsonResponse(textBlock?.text || "{}");
+    const items = parseBatchAiResponse(textBlock?.text || "{}", batch.length);
+    const totalTokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    return { items, totalTokens, usedModel: model };
   }
 
-  // OpenAI & tất cả nhà cung cấp tương thích OpenAI (OpenRouter, DeepSeek, Groq, xAI, Mistral, Perplexity, Qwen, Moonshot, Zhipu, Cohere, Together, Fireworks, Custom)
+  // OpenAI & tất cả nhà cung cấp tương thích OpenAI
   const baseUrl = (cfg.id === "custom" ? settings.customBaseUrl : cfg.baseUrl).replace(/\/+$/, "");
   const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
   const headers = { "Content-Type": "application/json" };
-  if (settings.apiKey) {
-    headers.Authorization = `Bearer ${settings.apiKey}`;
-  }
+  if (settings.apiKey) headers.Authorization = `Bearer ${settings.apiKey}`;
   if (cfg.id === "openrouter") {
     headers["HTTP-Referer"] = window.location.origin || "https://github.com";
     headers["X-Title"] = "AI Research Workflow";
@@ -1829,27 +2359,98 @@ async function callAiExtractMatrix(paper) {
   const sendOpenAiReq = async (useJsonFormat) => {
     const payload = {
       model,
+      temperature: 0.2,
+      max_tokens: maxOutputTokens,
       messages: [{ role: "user", content: prompt }]
     };
     if (useJsonFormat && cfg.id !== "perplexity") {
       payload.response_format = { type: "json_object" };
     }
-    return fetch(endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload)
-    });
+    return fetchWithTimeout(
+      endpoint,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload)
+      },
+      45000,
+      signal
+    );
   };
 
   let res = await sendOpenAiReq(true);
-  // Một số model (reasoning hoặc open-source trên OpenRouter/Groq) không hỗ trợ response_format: json_object -> tự thử lại không kèm tham số này
   if (res.status === 400) {
     res = await sendOpenAiReq(false);
   }
-  if (!res.ok) throw new Error(await readErrorMessage(res, cfg.shortName));
+  if (!res.ok) {
+    const err = new Error(await readErrorMessage(res, cfg.shortName));
+    err.status = res.status;
+    err.retryAfterMs = parseRetryAfterMs(res);
+    throw err;
+  }
   const data = await res.json();
   const rawContent = data.choices?.[0]?.message?.content || "{}";
-  return parseAiJsonResponse(rawContent);
+  const items = parseBatchAiResponse(rawContent, batch.length);
+  const totalTokens = data.usage?.total_tokens || 0;
+  return { items, totalTokens, usedModel: model };
+}
+
+async function callAiBatchWithRetryAndFallback(batch, candidateModels, maxAbstractChars, statusEl, batchLabel) {
+  const models = candidateModels && candidateModels.length > 0 ? candidateModels : [settings.model];
+  let callsMade = 0;
+  let hadRateLimit = false;
+  let lastError = null;
+
+  for (let mIdx = 0; mIdx < models.length; mIdx++) {
+    const model = models[mIdx];
+    const hasNextModel = mIdx < models.length - 1;
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (stopAiFlag) throw new Error("Đã dừng bởi người dùng");
+      try {
+        callsMade++;
+        const result = await callAiBatchRequest(batch, model, maxAbstractChars);
+        return { ...result, callsMade, hadRateLimit };
+      } catch (err) {
+        if (err.name === "AbortError" || stopAiFlag) throw err;
+        lastError = err;
+        const status = err.status || 0;
+
+        // Lỗi 401/402 (sai API Key hoặc hết tiền tài khoản) thì dừng luôn, không cần thử model khác
+        if (status === 401 || status === 402) throw err;
+
+        // Model không tồn tại / không có quyền (404 / 403 / 400) -> chuyển ngay sang model dự phòng nếu có
+        if ((status === 404 || status === 403 || status === 400) && hasNextModel) {
+          if (statusEl) {
+            statusEl.textContent = `Model "${model}" báo HTTP ${status} ở ${batchLabel}. Auto chuyển sang "${models[mIdx + 1]}"...`;
+          }
+          break;
+        }
+
+        // Lỗi 429 (rate limit) hoặc 5xx / timeout mạng -> retry nhanh với backoff hoặc chuyển model dự phòng
+        const isTransient = status === 429 || status >= 500 || status === 0;
+        if (status === 429) hadRateLimit = true;
+
+        if (isTransient && attempt === 0) {
+          const waitMs = status === 429 ? err.retryAfterMs || 4000 : 1800;
+          if (statusEl) {
+            statusEl.textContent = `API (${model}) tạm nghẽn ở ${batchLabel}. Đợi ${(waitMs / 1000).toFixed(1)}s thử lại...`;
+          }
+          await sleep(waitMs);
+          continue;
+        }
+
+        if (hasNextModel) {
+          if (statusEl) {
+            statusEl.textContent = `Model "${model}" gặp lỗi (${err.message.slice(0, 50)}). Auto chuyển sang "${models[mIdx + 1]}"...`;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  throw lastError || new Error("Không gọi được AI API.");
 }
 
 // ==========================================
@@ -1891,7 +2492,6 @@ function splitAcademicSentences(text) {
     const escaped = orig.replace(/\./g, "\\.");
     masked = masked.replace(new RegExp(escaped, "gi"), token);
   });
-  // Bảo vệ số thập phân như 0.05 hoặc 12.4%
   masked = masked.replace(/(\d)\.(\d)/g, "$1__DEC__$2");
 
   const parts = masked
@@ -1908,7 +2508,6 @@ function splitAcademicSentences(text) {
 }
 
 function parseStructuredAbstractSections(text) {
-  // Nhận diện các Abstract có cấu trúc nhãn chuẩn (Emerald, Springer, Elsevier, PubMed...)
   const headingRegex =
     /(?:^|\s)(Background|Purpose|Objectives?|Aims?|Introduction|Design\/methodology\/approach|Methodology|Methods?|Materials?\s+and\s+methods?|Data(?:\s+and\s+methods?)?|Sample|Findings?|Results?|Conclusions?|Originality\/value|Research\s+limitations?(?:\/implications?)?|Limitations?|Practical\s+implications?|Implications?|Future\s+research)\s*[:\-–]\s*/gi;
 
@@ -1971,81 +2570,138 @@ function extractMatrixFreeEnglish(paper) {
   }
 
   const structured = parseStructuredAbstractSections(clean);
+  if (structured && (structured.summary || structured.method || structured.findings || structured.gap)) {
+    const vi = isVietnameseText(clean);
+    return {
+      summary: structured.summary || splitAcademicSentences(clean)[0] || clean,
+      method:
+        structured.method ||
+        (vi
+          ? "Abstract chưa nêu chi tiết phương pháp hoặc cỡ mẫu; cần kiểm tra mục Methodology trong bài gốc."
+          : "Not explicitly specified in the abstract; check the Methodology/Data section in the full text."),
+      findings:
+        structured.findings ||
+        (vi
+          ? "Abstract chưa tách riêng kết quả chính; xem thêm mục Results trong bài gốc."
+          : "Key empirical findings are not separately detailed in the abstract."),
+      gap:
+        structured.gap ||
+        (vi
+          ? "Abstract chưa nêu trực tiếp hạn chế/khoảng trống; gợi ý đọc phần Conclusion & Future Research."
+          : "No explicit limitations or research gap stated in the abstract; inspect Conclusion & Future Research.")
+    };
+  }
+
   const sentences = splitAcademicSentences(clean);
 
   const summaryPatterns = [
-    [/\b(this (study|paper|article|research|work)|we (aim|examine|investigate|explore|analyze|analyse|study|propose|assess|evaluate))\b/i, 4],
-    [/\b(purpose|objective|aims? to|seeks? to|focuses? on|addresses?|examines?|investigates?|explores?)\b/i, 3],
-    [/\b(mục tiêu|nghiên cứu này|bài viết này|bối cảnh|nhằm mục đích|xem xét|đánh giá)\b/i, 4]
+    [/\b(this (study|paper|article|research|work)|we (aim|examine|investigate|explore|analyze|analyse|study|propose|assess|evaluate|present|provide|introduce|review)|here,? we)\b/i, 5],
+    [/\b(purpose|objective|aims? to|seeks? to|focuses? on|addresses?|examines?|investigates?|explores?|crucial|important|growing interest)\b/i, 3],
+    [/\b(mục tiêu|nghiên cứu này|bài viết này|bối cảnh|nhằm mục đích|xem xét|đánh giá)\b/i, 5]
   ];
 
   const methodPatterns = [
-    [/\b(method|methodology|approach|framework|model|regression|panel data|sem|pls-sem|did|difference-in-differences|gmm|ols|iv|econometric|machine learning|deep learning|neural network|meta-analysis|bibliometric|prisma|case study|qualitative|quantitative|mixed-method|experiment)\b/i, 4],
+    [/\b(using|apply(?:ing)?|employ(?:ing)?|adopt(?:ing)?|utiliz(?:e|ing)|based on|collected from|conducted|method|methodology|approach|framework|model|regression|panel data|sem|pls-sem|did|difference-in-differences|gmm|ols|iv|econometric|machine learning|deep learning|neural network|meta-analysis|bibliometric|prisma|case study|qualitative|quantitative|mixed-method|experiment)\b/i, 4],
     [/\b(sample|dataset|data from|survey|questionnaire|interview|observations?|firms?|companies|enterprises|participants|respondents|countries|listed|database|compustat|bloomberg|world bank)\b/i, 3],
-    [/\b(n\s*=\s*\d+|\d{2,5}\s+(firms|companies|observations|participants|respondents|articles|papers|studies|countries)|(?:19|20)\d{2}\s*[-–to]+\s*(?:19|20)\d{2})\b/i, 3],
+    [/\b(n\s*=\s*\d+|\d{2,5}\s+(firms|companies|observations|participants|respondents|articles|papers|studies|countries)|(?:19|20)\d{2}\s*[-–to]+\s*(?:19|20)\d{2})\b/i, 4],
     [/\b(phương pháp|dữ liệu|mẫu nghiên cứu|khảo sát|phỏng vấn|hồi quy|mô hình|dữ liệu bảng|doanh nghiệp|quan sát)\b/i, 4]
   ];
 
   const findingsPatterns = [
-    [/\b(results? (show|indicate|reveal|demonstrate|suggest|confirm)|findings? (show|indicate|reveal|demonstrate|suggest)|we find|our findings|evidence shows?|empirically)\b/i, 5],
-    [/\b(significant(ly)?|positively|negatively|impact|effect|associated with|relationship|increases?|decreases?|improves?|reduces?|outperforms?|mediates?|moderates?|drives?)\b/i, 3],
-    [/\b(kết quả|phát hiện|cho thấy|tác động tích cực|tác động tiêu cực|có ý nghĩa thống kê|mối quan hệ|ảnh hưởng)\b/i, 5]
+    [/\b(results? (show|indicate|reveal|demonstrate|suggest|confirm)|findings? (show|indicate|reveal|demonstrate|suggest)|we find|our findings|evidence shows?|empirically|we show that|we demonstrate)\b/i, 6],
+    [/\b(significant(ly)?|positively|negatively|impact|effect|associated with|relationship|increases?|decreases?|improves?|reduces?|outperforms?|mediates?|moderates?|drives?|accuracy)\b/i, 3],
+    [/\b(kết quả|phát hiện|cho thấy|tác động tích cực|tác động tiêu cực|có ý nghĩa thống kê|mối quan hệ|ảnh hưởng)\b/i, 6]
   ];
 
   const gapPatterns = [
-    [/\b(limitation|limitations|caveat|shortcoming|drawback|future research|further (research|study|studies|investigation)|remain(s)? (unclear|limited|scarce|unexplored)|research gap|gap in the literature)\b/i, 6],
-    [/\b(however|although|nevertheless|despite|yet|still scarce|lack of|little is known|underexplored|challenge|barrier|implications? for (policy|practice|managers|future))\b/i, 3],
-    [/\b(hạn chế|khoảng trống|nghiên cứu tương lai|nghiên cứu tiếp theo|tuy nhiên|thách thức|hàm ý chính sách|hàm ý quản trị)\b/i, 5]
+    [/\b(limitation|limitations|caveat|shortcoming|drawback|future research|further (research|study|studies|investigation)|remain(s)? (unclear|limited|scarce|unexplored)|research gap|gap in the literature|open question)\b/i, 7],
+    [/\b(however|although|nevertheless|despite|yet|still scarce|lack of|little is known|underexplored|challenge|barrier|implications? for (policy|practice|managers|future))\b/i, 4],
+    [/\b(hạn chế|khoảng trống|nghiên cứu tương lai|nghiên cứu tiếp theo|tuy nhiên|thách thức|hàm ý chính sách|hàm ý quản trị)\b/i, 6]
   ];
 
-  const pickBestSentences = (patterns, maxCount, excludeIndices = new Set(), biasFn = null) => {
-    const scored = sentences.map((s, idx) => {
-      let sc = scoreSentence(s, patterns);
-      if (biasFn) sc += biasFn(idx, sentences.length);
-      if (excludeIndices.has(idx)) sc -= 1.5;
-      return { idx, text: s, score: sc };
+  // Gán ĐỘC QUYỀN từng câu vào đúng 1 cột có điểm cao nhất (tránh trùng lặp câu giữa các cột)
+  const buckets = { summary: [], method: [], findings: [], gap: [] };
+  const n = sentences.length;
+
+  sentences.forEach((s, idx) => {
+    const startsLikeMethod = /^(using|employing|applying|based on|to (test|examine|investigate|analyze)|this study uses)/i.test(s);
+    const scores = {
+      summary: scoreSentence(s, summaryPatterns) + (idx === 0 && !startsLikeMethod ? 3.0 : idx === 1 && !startsLikeMethod ? 1.0 : 0),
+      method: scoreSentence(s, methodPatterns) + (idx >= 1 && idx <= Math.ceil(n * 0.65) ? 0.8 : 0) + (startsLikeMethod ? 2.0 : 0),
+      findings: scoreSentence(s, findingsPatterns) + (idx >= Math.floor(n * 0.4) ? 1.2 : 0),
+      gap: scoreSentence(s, gapPatterns) + (idx === n - 1 && n > 2 ? 0.8 : 0)
+    };
+
+    const ordered = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    const [bestBucket, bestScore] = ordered[0];
+    if (bestScore >= 2.5) {
+      buckets[bestBucket].push({ idx, text: s, score: bestScore });
+    }
+  });
+
+  const usedIndices = new Set();
+  // Bảo đảm câu đầu tiên luôn thuộc Tóm tắt nếu Tóm tắt chưa có ứng viên và abstract có >= 2 câu
+  if (buckets.summary.length === 0 && n >= 2) {
+    buckets.summary.push({ idx: 0, text: sentences[0], score: 99 });
+    ["method", "findings", "gap"].forEach((k) => {
+      buckets[k] = buckets[k].filter((item) => item.idx !== 0);
     });
-    const positives = scored.filter((item) => item.score > 0).sort((a, b) => b.score - a.score);
-    const chosen = positives.slice(0, maxCount).sort((a, b) => a.idx - b.idx);
-    chosen.forEach((c) => excludeIndices.add(c.idx));
-    return chosen.map((c) => c.text).join(" ");
+  }
+
+  const finalizeBucket = (key, maxCount) => {
+    const chosen = buckets[key]
+      .filter((item) => !usedIndices.has(item.idx))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, maxCount)
+      .sort((a, b) => a.idx - b.idx);
+    chosen.forEach((item) => usedIndices.add(item.idx));
+    return chosen.map((item) => item.text).join(" ");
   };
 
-  const used = new Set();
+  // Thứ tự ưu tiên lấy câu rõ ràng nhất cho từng cột
+  let summary = finalizeBucket("summary", 2);
+  let gap = finalizeBucket("gap", 2);
+  let method = finalizeBucket("method", 2);
+  let findings = finalizeBucket("findings", 2);
 
-  let summary = structured?.summary || "";
+  // Nếu Tóm tắt vẫn chưa có (VD abstract chỉ có 1 câu), lấy câu chưa dùng đầu tiên nếu có
   if (!summary) {
-    summary = pickBestSentences(summaryPatterns, 2, used, (idx) => (idx === 0 ? 2 : idx === 1 ? 1 : 0));
-    if (!summary) summary = sentences.slice(0, Math.min(2, sentences.length)).join(" ");
-  }
-
-  let method = structured?.method || "";
-  if (!method) {
-    method = pickBestSentences(methodPatterns, 2, used);
-    if (!method) {
-      method = isVietnameseText(clean)
-        ? "Abstract chưa nêu chi tiết phương pháp hoặc cỡ mẫu; cần kiểm tra mục Methodology trong bài gốc."
-        : "Not explicitly specified in the abstract; check the Methodology/Data section in the full text.";
+    const firstUnused = sentences.findIndex((_, idx) => !usedIndices.has(idx));
+    if (firstUnused !== -1) {
+      usedIndices.add(firstUnused);
+      summary = sentences[firstUnused];
+    } else {
+      summary = clean;
     }
   }
 
-  let findings = structured?.findings || "";
+  // Nếu Kết quả chưa có câu nào và vẫn còn câu chưa dùng ở nửa sau, lấy 1 câu chưa dùng
   if (!findings) {
-    findings = pickBestSentences(findingsPatterns, 2, used, (idx, len) => (idx >= Math.floor(len * 0.45) ? 1 : 0));
-    if (!findings) {
-      const tailIdx = Math.max(0, sentences.length - 2);
-      findings = sentences.slice(tailIdx).join(" ");
+    const unusedTail = sentences
+      .map((s, idx) => ({ idx, s }))
+      .filter((item) => !usedIndices.has(item.idx) && item.idx >= Math.floor(n / 2));
+    if (unusedTail.length > 0) {
+      const pick = unusedTail[unusedTail.length - 1];
+      usedIndices.add(pick.idx);
+      findings = pick.s;
     }
   }
 
-  let gap = structured?.gap || "";
+  const vi = isVietnameseText(clean);
+  if (!method) {
+    method = vi
+      ? "Abstract chưa nêu chi tiết phương pháp hoặc cỡ mẫu; cần kiểm tra mục Methodology trong bài gốc."
+      : "Not explicitly specified in the abstract; check the Methodology/Data section in the full text.";
+  }
+  if (!findings) {
+    findings = vi
+      ? "Abstract chưa tách riêng kết quả chính; xem thêm mục Results trong bài gốc."
+      : "Key empirical findings are not separately detailed in the abstract; inspect the Results section.";
+  }
   if (!gap) {
-    gap = pickBestSentences(gapPatterns, 2, used, (idx, len) => (idx === len - 1 ? 1 : 0));
-    if (!gap) {
-      gap = isVietnameseText(clean)
-        ? "Abstract chưa nêu trực tiếp hạn chế/khoảng trống; gợi ý đọc phần Conclusion & Future Research trong bài gốc."
-        : "No explicit limitations or research gap stated in the abstract; inspect Conclusion & Future Research in the full text.";
-    }
+    gap = vi
+      ? "Abstract chưa nêu trực tiếp hạn chế/khoảng trống; gợi ý đọc phần Conclusion & Future Research trong bài gốc."
+      : "No explicit limitations or research gap stated in the abstract; inspect Conclusion & Future Research in the full text.";
   }
 
   return { summary, method, findings, gap };
@@ -2053,7 +2709,9 @@ function extractMatrixFreeEnglish(paper) {
 
 async function translateViaLocalServer(texts) {
   if (localTranslateServerAvailable === false) return null;
-  if (window.location.protocol === "file:") {
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  const isLocalHost = host === "localhost" || host === "127.0.0.1" || host === "[::1]";
+  if (!isLocalHost || window.location.protocol === "file:") {
     localTranslateServerAvailable = false;
     return null;
   }
@@ -2077,8 +2735,14 @@ async function translateViaLocalServer(texts) {
     }
     const data = await res.json();
     if (data?.ok && Array.isArray(data.translated) && data.translated.length === texts.length) {
-      localTranslateServerAvailable = true;
-      return data.translated;
+      const anyChanged = data.translated.some((val, idx) => Boolean(val && val !== texts[idx]));
+      if (anyChanged) {
+        localTranslateServerAvailable = true;
+        return data.translated;
+      }
+      // server.py trả về nguyên văn (mạng server cục bộ bị chặn) -> chuyển sang trình duyệt dịch trực tiếp
+      localTranslateServerAvailable = false;
+      return null;
     }
     return null;
   } catch (_) {
@@ -2127,11 +2791,40 @@ async function translateSingleTextBrowser(text) {
   return null;
 }
 
+async function translateFourFieldsCombinedBrowser(fields) {
+  const combined = fields.map((f, idx) => `[${idx + 1}] ${f}`).join("\n");
+  const translatedCombined = await translateSingleTextBrowser(combined);
+  if (!translatedCombined) return null;
+
+  const lines = translatedCombined.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const parsed = new Array(4).fill("");
+  let currentSlot = -1;
+
+  for (const line of lines) {
+    const match = line.match(/^\[(\d+)\]\s*(.*)$/);
+    if (match) {
+      const slot = parseInt(match[1], 10) - 1;
+      if (slot >= 0 && slot < 4) {
+        currentSlot = slot;
+        parsed[slot] = match[2].trim();
+        continue;
+      }
+    }
+    if (currentSlot !== -1) {
+      parsed[currentSlot] = `${parsed[currentSlot]} ${line}`.trim();
+    }
+  }
+
+  if (parsed.every((item) => item.length > 0)) {
+    return parsed;
+  }
+  return null;
+}
+
 async function analyzePaperFreeMode(paper) {
   const extracted = extractMatrixFreeEnglish(paper);
   const fields = [extracted.summary, extracted.method, extracted.findings, extracted.gap];
 
-  // Nếu Abstract đã là tiếng Việt sẵn thì không cần dịch
   if (isVietnameseText(paper.abstract)) {
     return {
       ...extracted,
@@ -2140,7 +2833,6 @@ async function analyzePaperFreeMode(paper) {
     };
   }
 
-  // Nếu đang mất mạng, trả về ngay kết quả tiếng Anh để không lỗi
   if (typeof navigator !== "undefined" && navigator.onLine === false) {
     return {
       ...extracted,
@@ -2149,7 +2841,7 @@ async function analyzePaperFreeMode(paper) {
     };
   }
 
-  // Ưu tiên 1: Dịch nhanh qua server.py nếu đang chạy local server
+  // Ưu tiên 1: Dịch nhanh qua server.py (chỉ gọi khi chạy localhost)
   const serverResult = await translateViaLocalServer(fields);
   if (serverResult) {
     return {
@@ -2162,8 +2854,21 @@ async function analyzePaperFreeMode(paper) {
     };
   }
 
-  // Ưu tiên 2: Dịch trực tiếp trên trình duyệt (hoạt động tốt trên GitHub Pages)
+  // Ưu tiên 2: Gộp 4 cột thành 1 lần gọi dịch duy nhất trên trình duyệt (giảm 4x request)
   try {
+    const combinedTranslated = await translateFourFieldsCombinedBrowser(fields);
+    if (combinedTranslated && combinedTranslated.some((val, idx) => Boolean(val && val !== fields[idx]))) {
+      return {
+        summary: combinedTranslated[0] || extracted.summary,
+        method: combinedTranslated[1] || extracted.method,
+        findings: combinedTranslated[2] || extracted.findings,
+        gap: combinedTranslated[3] || extracted.gap,
+        translated: true,
+        metaLabel: "Trích xuất tự động + Dịch nhanh VI (1-call)"
+      };
+    }
+
+    // Dự phòng tách từng trường nếu chuỗi gộp bị mất định dạng
     const translatedParts = await Promise.all(fields.map((t) => translateSingleTextBrowser(t)));
     const anyTranslated = translatedParts.some((val, idx) => Boolean(val && val !== fields[idx]));
     if (anyTranslated) {
@@ -2178,7 +2883,6 @@ async function analyzePaperFreeMode(paper) {
     }
   } catch (_) {}
 
-  // Dự phòng an toàn tuyệt đối: giữ nguyên tiếng Anh đã tách
   return {
     ...extracted,
     translated: false,
@@ -2189,14 +2893,51 @@ async function analyzePaperFreeMode(paper) {
 // ==========================================
 // 5. XUẤT EXCEL TỔNG HỢP & LƯU DỰ ÁN
 // ==========================================
-function exportToExcel() {
+let xlsxLoadPromise = null;
+function ensureXlsxLoaded() {
+  if (typeof XLSX !== "undefined") return Promise.resolve();
+  if (xlsxLoadPromise) return xlsxLoadPromise;
+
+  xlsxLoadPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      xlsxLoadPromise = null;
+      reject(new Error("Không tải được thư viện xuất Excel (XLSX). Vui lòng kiểm tra kết nối mạng."));
+    };
+    document.head.appendChild(script);
+  });
+  return xlsxLoadPromise;
+}
+
+async function exportToExcel() {
   if (papers.length === 0) {
     alert("Chưa có dữ liệu để xuất Excel!");
     return;
   }
-  if (typeof XLSX === "undefined") {
-    alert("Thư viện xuất Excel (XLSX) chưa tải xong. Vui lòng kiểm tra kết nối mạng và tải lại trang.");
+
+  const btn = document.getElementById("btnExportExcel");
+  const prevText = btn?.textContent || "";
+  try {
+    if (typeof XLSX === "undefined" && btn) {
+      btn.disabled = true;
+      btn.textContent = "Đang tải thư viện Excel...";
+    }
+    await ensureXlsxLoaded();
+  } catch (err) {
+    alert(err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = prevText;
+    }
     return;
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = prevText || "Xuất Excel Tổng Hợp (.xlsx)";
+    }
   }
 
   const wb = XLSX.utils.book_new();
