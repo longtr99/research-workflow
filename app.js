@@ -4,27 +4,20 @@
 const AI_PROVIDERS = {
   gemini: {
     id: "gemini",
-    name: "Google Gemini (Khuyên dùng · Có gói miễn phí)",
+    name: "Google Gemini (Khuyên dùng · Từ 3.8 trở lên)",
     shortName: "Google Gemini",
     protocol: "gemini",
     apiKeyPlaceholder: "Nhập Gemini API Key (bắt đầu bằng AIza...)",
     keyUrl: "https://aistudio.google.com/apikey",
     keyLinkLabel: "Tạo Gemini API Key miễn phí tại aistudio.google.com/apikey ↗",
-    defaultModel: "gemini-2.5-flash",
+    defaultModel: "gemini-3.8-flash",
     canFetchLiveModels: true,
     models: [
-      { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash (Khuyên dùng · Nhanh & Miễn phí)" },
-      { id: "gemini-2.5-pro", label: "Gemini 2.5 Pro (Chuyên sâu)" },
-      { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash-Lite (Siêu nhẹ)" },
-      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Mới nhất · 1M context)" },
-      { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
-      { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
-      { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro Preview" },
-      { id: "gemini-4-hydrogen", label: "Gemini 4 Hydrogen (Thế hệ 4 · Nhanh)" },
+      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash (Khuyên dùng · Nhanh & 1M context)" },
+      { id: "gemini-4-hydrogen", label: "Gemini 4 Hydrogen (Thế hệ 4 · Nhanh & hiệu quả)" },
       { id: "gemini-4-argon", label: "Gemini 4 Argon (Thế hệ 4 · Suy luận sâu)" },
       { id: "gemini-4-carbon", label: "Gemini 4 Carbon (Thế hệ 4 · Cao cấp nhất)" },
-      { id: "gemini-2.0-flash", label: "Gemini 2.0 Flash" },
-      { id: "gemini-2.0-flash-lite", label: "Gemini 2.0 Flash-Lite" }
+      { id: "gemini-4-neon", label: "Gemini 4 Neon (Thế hệ 4 · Preview)" }
     ]
   },
   openai: {
@@ -66,14 +59,13 @@ const AI_PROVIDERS = {
     apiKeyPlaceholder: "Nhập OpenRouter API Key (bắt đầu bằng sk-or-v1-...)",
     keyUrl: "https://openrouter.ai/keys",
     keyLinkLabel: "Tạo OpenRouter API Key tại openrouter.ai/keys ↗",
-    defaultModel: "google/gemini-2.5-flash",
+    defaultModel: "google/gemini-3.8-flash",
     canFetchLiveModels: true,
     publicModelsEndpoint: true,
     models: [
-      { id: "google/gemini-2.5-flash", label: "Google: Gemini 2.5 Flash" },
-      { id: "google/gemini-2.5-pro", label: "Google: Gemini 2.5 Pro" },
       { id: "google/gemini-3.8-flash", label: "Google: Gemini 3.8 Flash" },
-      { id: "google/gemini-2.0-flash-exp:free", label: "Google: Gemini 2.0 Flash Exp (Miễn phí :free)" },
+      { id: "google/gemini-4-hydrogen", label: "Google: Gemini 4 Hydrogen" },
+      { id: "google/gemini-4-argon", label: "Google: Gemini 4 Argon" },
       { id: "openai/gpt-4o-mini", label: "OpenAI: GPT-4o Mini" },
       { id: "openai/gpt-5-mini", label: "OpenAI: GPT-5 Mini" },
       { id: "openai/gpt-6.2-sol", label: "OpenAI: GPT-6.2 Sol" },
@@ -380,11 +372,12 @@ const AI_PROVIDERS = {
 // ==========================================
 let papers = [];
 let scopusMap = {}; // key: "I:ISSN" hoặc "T:title" -> { q, sjr }
+let scopusFileName = "";
 let liveModelsCache = {}; // { providerId: [{ id, label }, ...] }
 let settings = {
   analysisMode: "api", // "api" | "free"
   provider: "gemini",
-  model: "gemini-2.5-flash",
+  model: "gemini-3.8-flash",
   apiKey: "",
   customBaseUrl: "http://localhost:11434/v1",
   email: ""
@@ -400,8 +393,10 @@ try {
 
 try {
   scopusMap = JSON.parse(localStorage.getItem("rw_scopus_map") || "{}");
+  scopusFileName = localStorage.getItem("rw_scopus_filename") || "";
 } catch (e) {
   scopusMap = {};
+  scopusFileName = "";
 }
 
 try {
@@ -417,11 +412,37 @@ try {
   }
 } catch (e) {}
 
+function isDeprecatedGeminiModel(modelId) {
+  const id = (modelId || "").toLowerCase().replace(/^google\//, "");
+  if (!id.startsWith("gemini-")) return false;
+  const verMatch = id.match(/^gemini-(\d+)(?:\.(\d+))?/);
+  if (!verMatch) return false;
+  const major = parseInt(verMatch[1], 10);
+  const minor = parseInt(verMatch[2] || "0", 10);
+  return major < 3 || (major === 3 && minor < 8);
+}
+
 if (!AI_PROVIDERS[settings.provider]) {
   settings.provider = "gemini";
 }
 if (!["api", "free"].includes(settings.analysisMode)) {
   settings.analysisMode = "api";
+}
+// Tự động nâng cấp model Gemini cũ (< 3.8) đã lưu từ trước sang gemini-3.8-flash
+if (settings.provider === "gemini" && isDeprecatedGeminiModel(settings.model)) {
+  settings.model = "gemini-3.8-flash";
+  try {
+    localStorage.setItem("rw_settings", JSON.stringify(settings));
+  } catch (e) {}
+} else if (settings.provider === "openrouter" && isDeprecatedGeminiModel(settings.model)) {
+  settings.model = "google/gemini-3.8-flash";
+  try {
+    localStorage.setItem("rw_settings", JSON.stringify(settings));
+  } catch (e) {}
+}
+// Loại bỏ model Gemini cũ (< 3.8) nếu từng được cache từ API
+if (Array.isArray(liveModelsCache.gemini)) {
+  liveModelsCache.gemini = liveModelsCache.gemini.filter((m) => !isDeprecatedGeminiModel(m.id));
 }
 
 // ==========================================
@@ -645,7 +666,7 @@ async function fetchLiveModelsForCurrentProvider(silent = false) {
           const id = (m.name || "").replace(/^models\//, "");
           return { id, label: m.displayName || id };
         })
-        .filter((m) => m.id);
+        .filter((m) => m.id && !isDeprecatedGeminiModel(m.id));
     } else if (cfg.protocol === "anthropic") {
       const res = await fetch("https://api.anthropic.com/v1/models?limit=100", {
         headers: {
@@ -833,18 +854,29 @@ function bindEvents() {
   // Scopus CSV Upload
   document.getElementById("inputScopusCsv")?.addEventListener("change", handleScopusCsvUpload);
   document.getElementById("btnReMatchScopus")?.addEventListener("click", () => {
+    if (papers.length === 0) {
+      setScopusFeedback("Chưa có bài báo nào ở Tab 1 để đối chiếu.", "info");
+      return;
+    }
     papers.forEach((p) => matchScopusForPaper(p));
     savePapers();
     renderPapersTable();
-    alert("Đã đối chiếu lại toàn bộ danh sách với dữ liệu Scopus/Q!");
+    const matchedCount = papers.filter((p) => p.scopusQuartile).length;
+    setScopusFeedback(
+      `Đã đối chiếu lại danh sách hiện tại: khớp ${matchedCount}/${papers.length} bài với danh mục Scopus/Q!`,
+      "success"
+    );
   });
   document.getElementById("btnClearScopus")?.addEventListener("click", () => {
     scopusMap = {};
+    scopusFileName = "";
     localStorage.removeItem("rw_scopus_map");
+    localStorage.removeItem("rw_scopus_filename");
     updateScopusDbStatus();
     papers.forEach((p) => matchScopusForPaper(p));
     savePapers();
     renderPapersTable();
+    setScopusFeedback("Đã xóa dữ liệu danh mục tạp chí.", "info");
   });
 
   // Mode cards (Tab 3 & Tab 4 synced)
@@ -1256,29 +1288,47 @@ function handleScopusCsvUpload(e) {
       let savedToStorage = true;
       try {
         localStorage.setItem("rw_scopus_map", JSON.stringify(nextMap));
+        localStorage.setItem("rw_scopus_filename", file.name);
       } catch (storageErr) {
         savedToStorage = false;
       }
 
       scopusMap = nextMap;
+      scopusFileName = file.name;
       updateScopusDbStatus(savedToStorage ? "localStorage" : "memory");
 
       if (papers.length > 0) {
         papers.forEach((p) => matchScopusForPaper(p));
         savePapers();
         renderPapersTable();
+        const matchedCount = papers.filter((p) => p.scopusQuartile).length;
+        setScopusFeedback(
+          `Đã nạp thành công ${count.toLocaleString("vi-VN")} tạp chí và đối chiếu khớp ${matchedCount}/${papers.length} bài hiện tại với danh mục Scopus/Q!`,
+          "success"
+        );
+      } else {
+        setScopusFeedback(
+          `Đã nạp thành công ${count.toLocaleString("vi-VN")} tạp chí!`,
+          "success"
+        );
       }
 
       e.target.value = "";
-      alert(`Đã nạp thành công ${count.toLocaleString()} tạp chí!`);
     } catch (err) {
       console.error(err);
-      alert(`Lỗi khi xử lý file CSV: ${err.message}`);
+      setScopusFeedback(`Lỗi khi xử lý file CSV: ${err.message}`, "error");
       updateScopusDbStatus();
     }
   };
 
   reader.readAsText(file, "UTF-8");
+}
+
+function setScopusFeedback(message, type = "success") {
+  const el = document.getElementById("scopusMatchFeedback");
+  if (!el) return;
+  el.textContent = message || "";
+  el.className = message ? `status-feedback ${type}` : "status-feedback";
 }
 
 function matchScopusForPaper(paper) {
@@ -1314,7 +1364,8 @@ function updateScopusDbStatus(mode = "localStorage") {
       mode === "memory"
         ? " (đang giữ trên phiên trình duyệt hiện tại do file lớn, tải lại trang sẽ cần nạp lại)."
         : " trong bộ nhớ đối chiếu cục bộ.";
-    el.textContent = `Đang lưu trữ ${keys.length.toLocaleString()} tạp chí${suffix}`;
+    const fileNote = scopusFileName ? ` (${escapeHtml(scopusFileName)})` : "";
+    el.innerHTML = `Đang lưu trữ <strong>${keys.length.toLocaleString("vi-VN")}</strong> tạp chí${suffix}${fileNote}`;
   } else {
     el.textContent = "Chưa nạp danh mục tạp chí nào.";
   }

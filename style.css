@@ -101,6 +101,16 @@ body {
 
 .action-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .status-text { font-size: 13px; color: var(--muted); font-weight: 500; }
+.status-feedback {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 6px;
+  min-height: 0;
+}
+.status-feedback:empty { display: none; }
+.status-feedback.success { color: var(--success); }
+.status-feedback.error { color: var(--danger); }
+.status-feedback.info { color: var(--muted); }
 
 .btn {
   padding: 8px 14px;

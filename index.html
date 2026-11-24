@@ -157,6 +157,7 @@
           <button id="btnClearScopus" class="btn btn-danger">Xóa Dữ Liệu Danh Mục</button>
         </div>
         <p id="scopusDbStatus" class="status-text mt-12">Chưa nạp danh mục tạp chí nào.</p>
+        <p id="scopusMatchFeedback" class="status-feedback" aria-live="polite"></p>
       </div>
     </section>
 
@@ -177,7 +178,7 @@
             </div>
             <h3>Dùng AI Chuyên Sâu (API Key)</h3>
             <p class="mode-desc">
-              Dùng Google Gemini (2.5 Flash) / OpenAI / OpenRouter / Claude / DeepSeek… cấu hình ở Tab 4. Đọc hiểu sâu Abstract và viết tổng hợp 4 cột bằng tiếng Việt học thuật.
+              Dùng Google Gemini (3.8 Flash / Gemini 4) / OpenAI / OpenRouter / Claude / DeepSeek… cấu hình ở Tab 4. Đọc hiểu sâu Abstract và viết tổng hợp 4 cột bằng tiếng Việt học thuật.
             </p>
             <div class="mode-meta" id="tab3ApiConfigHint">Đang kiểm tra cấu hình Tab 4...</div>
           </div>
@@ -277,7 +278,7 @@
           <strong>Gợi ý tạo Gemini API Key miễn phí:</strong>
           Truy cập
           <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
-          để tạo khóa Google Gemini miễn phí trong 30 giây, dùng mượt với <code>gemini-2.5-flash</code> hoặc dòng Gemini 3 / 4 mới nhất.
+          để tạo khóa Google Gemini miễn phí trong 30 giây, dùng mượt với <code>gemini-3.8-flash</code> hoặc dòng <code>Gemini 4</code> mới nhất.
         </div>
 
         <div class="grid-2 mt-12">
@@ -304,7 +305,7 @@
 
           <div class="form-group col-2">
             <label for="aiModel">Tên Model đang sử dụng (tự nhảy khi chọn ở trên, hoặc nhập mã model tùy ý)</label>
-            <input type="text" id="aiModel" value="gemini-2.5-flash" placeholder="VD: gemini-2.5-flash, gpt-4o-mini, anthropic/claude-sonnet-5-5..." />
+            <input type="text" id="aiModel" value="gemini-3.8-flash" placeholder="VD: gemini-3.8-flash, gemini-4-argon, gpt-6.2-sol, anthropic/claude-sonnet-5-5..." />
             <div id="modelFetchStatus" class="field-hint"></div>
           </div>
 
