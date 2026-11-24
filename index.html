@@ -221,6 +221,10 @@
             <input type="checkbox" id="chkOverwriteMatrix" checked />
             <span>Ghi đè bài đã phân tích (chạy lại bằng chế độ đang chọn)</span>
           </label>
+          <label class="inline-check" title="Khi AI API quá tải (503), hết hạn mức (429) hoặc quá thời gian chờ, tự động chuyển bài lỗi sang Chế độ Miễn Phí để không bị trống kết quả">
+            <input type="checkbox" id="chkAutoFallbackFree" checked />
+            <span>Tự dự phòng Miễn phí khi AI quá tải (503 / timeout)</span>
+          </label>
           <span id="aiStatus" class="status-text">Sẵn sàng.</span>
         </div>
       </div>

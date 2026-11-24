@@ -850,56 +850,64 @@ function resolveAutoModelPlan(providerId, targets = [], profileOverride = null) 
       ? Math.round(targets.reduce((acc, p) => acc + (p.abstract || "").length, 0) / count)
       : 1000;
 
+  const tiers = cfg.autoTiers || {};
+  const liveIds = (Array.isArray(liveModelsCache[cfg.id]) ? liveModelsCache[cfg.id] : []).map((m) => m.id);
+
   if (!isAutoModelSelected()) {
     const fixedModel = (settings.model || cfg.defaultModel).trim() || cfg.defaultModel;
+    const backups = [
+      ...(tiers.speed || []),
+      ...(tiers.balanced || []),
+      ...(tiers.quality || []),
+      cfg.defaultModel
+    ].filter((m) => m && m !== fixedModel);
+    const candidateModels = [fixedModel, ...new Set(backups)].slice(0, 5);
     return {
       isAuto: false,
       profile,
       tier: "manual",
       primaryModel: fixedModel,
-      candidateModels: [fixedModel],
-      batchSize: 3,
-      maxAbstractChars: 1600
+      candidateModels,
+      batchSize: 2,
+      maxAbstractChars: 1200
     };
   }
 
   let tier = "balanced";
-  let batchSize = 4;
-  let maxAbstractChars = 1500;
+  let batchSize = count > 0 && count <= 6 ? 2 : 3;
+  let maxAbstractChars = 1200;
 
   if (profile === "speed") {
     tier = "speed";
-    batchSize = 5;
-    maxAbstractChars = 1200;
+    batchSize = 3;
+    maxAbstractChars = 1000;
   } else if (profile === "quality") {
     tier = "quality";
     batchSize = 2;
-    maxAbstractChars = 2200;
+    maxAbstractChars = 1800;
   } else {
     if (count > 0 && count <= 4 && avgAbstractLen >= 900) {
       tier = "quality";
       batchSize = 2;
-      maxAbstractChars = 2000;
+      maxAbstractChars = 1500;
     } else if (count >= 12) {
       tier = "speed";
-      batchSize = 5;
-      maxAbstractChars = 1300;
+      batchSize = 3;
+      maxAbstractChars = 1100;
     } else {
       tier = "balanced";
-      batchSize = 4;
-      maxAbstractChars = 1500;
+      batchSize = count > 0 && count <= 6 ? 2 : 3;
+      maxAbstractChars = 1200;
     }
   }
 
-  const tiers = cfg.autoTiers || {};
   const tierOrder = [
     ...(tiers[tier] || []),
-    ...(tiers.balanced || []),
     ...(tiers.speed || []),
+    ...(tiers.balanced || []),
     ...(tiers.quality || []),
     cfg.defaultModel
   ];
-  const liveIds = (Array.isArray(liveModelsCache[cfg.id]) ? liveModelsCache[cfg.id] : []).map((m) => m.id);
   const candidateModels = [...new Set([...tierOrder, ...liveIds].filter(Boolean))].slice(0, 6);
 
   return {
@@ -954,14 +962,14 @@ function updatePerfEstimateUI() {
   const plan = resolveAutoModelPlan(settings.provider, targets);
   if (targets.length === 0) {
     estEl.innerHTML = plan.isAuto
-      ? `Auto đang chọn sẵn: <strong>${escapeHtml(plan.primaryModel)}</strong> (gộp ${plan.batchSize} bài/lần gọi để tiết kiệm token)`
-      : `Model cố định: <strong>${escapeHtml(plan.primaryModel)}</strong> (gộp ${plan.batchSize} bài/lần gọi)`;
+      ? `Auto đang chọn sẵn: <strong>${escapeHtml(plan.primaryModel)}</strong> (gộp ${plan.batchSize} bài/lô · song song 2 luồng)`
+      : `Model cố định: <strong>${escapeHtml(plan.primaryModel)}</strong> (kèm ${Math.max(0, plan.candidateModels.length - 1)} model dự phòng · gộp ${plan.batchSize} bài/lô · song song 2 luồng)`;
     return;
   }
 
   const batchCalls = Math.ceil(targets.length / plan.batchSize);
   const savedCallsPct = Math.max(0, Math.round((1 - batchCalls / targets.length) * 100));
-  estEl.innerHTML = `${plan.isAuto ? "Auto chọn" : "Model"}: <strong>${escapeHtml(plan.primaryModel)}</strong> · ${targets.length} bài → <strong>${batchCalls} lần gọi API</strong> (giảm ~${savedCallsPct}% lệnh gọi &amp; tối ưu token)`;
+  estEl.innerHTML = `${plan.isAuto ? "Auto chọn" : "Model"}: <strong>${escapeHtml(plan.primaryModel)}</strong> · ${targets.length} bài → <strong>${batchCalls} lần gọi API</strong> (song song 2 luồng · giảm ~${savedCallsPct}% lệnh gọi)`;
 }
 
 function persistSettings() {
@@ -1287,13 +1295,15 @@ async function testAiConnection() {
   }
 
   const startedAt = Date.now();
+  const telemetry = { callsMade: 0, totalTokens: 0, hadRateLimit: false };
   try {
     const res = await callAiBatchWithRetryAndFallback(
       [samplePaper],
       plan.candidateModels,
       plan.maxAbstractChars,
       statusEl,
-      "Kiểm tra"
+      "Kiểm tra",
+      telemetry
     );
     const first = res.items?.[0];
     if (!first || (!first.summary && !first.findings)) {
@@ -1301,7 +1311,7 @@ async function testAiConnection() {
     }
     const elapsedMs = Date.now() - startedAt;
     if (statusEl) {
-      statusEl.textContent = `Kết nối thành công với ${cfg.shortName} (${res.usedModel}) trong ${elapsedMs}ms! (~${res.totalTokens || "?"} tokens)`;
+      statusEl.textContent = `Kết nối thành công với ${cfg.shortName} (${res.usedModel}) trong ${elapsedMs}ms! (~${telemetry.totalTokens || res.totalTokens || "?"} tokens)`;
     }
   } catch (err) {
     console.error(err);
@@ -1316,21 +1326,35 @@ async function testAiConnection() {
 // ==========================================
 // 1. OPENALEX SEARCH & DEDUPLICATION
 // ==========================================
-async function fetchWithTimeout(url, options = {}, timeoutMs = 25000, externalSignal = null) {
+async function fetchWithTimeout(url, options = {}, timeoutMs = 20000, externalSignal = null) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(new Error(`Quá thời gian chờ (${Math.round(timeoutMs / 1000)}s)`)), timeoutMs);
-  const onExternalAbort = () => controller.abort(new Error("Đã hủy bởi người dùng"));
+  const timeoutErr = new Error(`Quá thời gian chờ (${Math.round(timeoutMs / 1000)}s)`);
+  timeoutErr.name = "TimeoutError";
+  timeoutErr.isTimeout = true;
+
+  const abortErr = new Error("Đã hủy bởi người dùng");
+  abortErr.name = "AbortError";
+  abortErr.isUserAbort = true;
+
+  const timer = setTimeout(() => controller.abort(timeoutErr), timeoutMs);
+  const onExternalAbort = () => controller.abort(abortErr);
 
   if (externalSignal) {
     if (externalSignal.aborted) {
       clearTimeout(timer);
-      throw new Error("Đã hủy bởi người dùng");
+      throw abortErr;
     }
     externalSignal.addEventListener("abort", onExternalAbort, { once: true });
   }
 
   try {
     return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    if (externalSignal?.aborted || err?.isUserAbort) throw abortErr;
+    if (controller.signal.aborted && controller.signal.reason) {
+      throw controller.signal.reason;
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
     if (externalSignal) {
@@ -1885,6 +1909,14 @@ function renderMatrixTable() {
     .join("");
 }
 
+function shouldAllowFreeFallback(err) {
+  if (!err) return false;
+  if (err.isUserAbort || err.name === "AbortError" || stopAiFlag) return false;
+  const status = err.status || 0;
+  if (status === 401 || status === 402) return false;
+  return Boolean(document.getElementById("chkAutoFallbackFree")?.checked ?? true);
+}
+
 window.rerunSinglePaperMatrix = async function (id) {
   const paper = papers.find((item) => item.id === id);
   if (!paper) return;
@@ -1908,23 +1940,40 @@ window.rerunSinglePaperMatrix = async function (id) {
   try {
     if (mode === "api") {
       const plan = resolveAutoModelPlan(cfg.id, [paper]);
+      const telemetry = { callsMade: 0, totalTokens: 0, hadRateLimit: false };
       if (statusEl) {
         statusEl.textContent = `Đang chạy lại (AI API · ${plan.isAuto ? "Auto → " + plan.primaryModel : plan.primaryModel}): ${paper.title.slice(0, 48)}...`;
       }
-      const res = await callAiBatchWithRetryAndFallback(
-        [paper],
-        plan.candidateModels,
-        plan.maxAbstractChars,
-        statusEl,
-        "1/1"
-      );
-      const item = res.items?.[0] || {};
-      paper.aiSummary = item.summary || "";
-      paper.aiMethod = item.method || "";
-      paper.aiFindings = item.findings || "";
-      paper.aiGap = item.gap || "";
-      paper.aiMode = "api";
-      paper.aiModelUsed = `${cfg.shortName} · ${plan.isAuto ? "Auto → " : ""}${res.usedModel}`;
+      try {
+        const res = await callAiBatchWithRetryAndFallback(
+          [paper],
+          plan.candidateModels,
+          plan.maxAbstractChars,
+          statusEl,
+          "1/1",
+          telemetry
+        );
+        const item = res.items?.[0] || {};
+        paper.aiSummary = item.summary || "";
+        paper.aiMethod = item.method || "";
+        paper.aiFindings = item.findings || "";
+        paper.aiGap = item.gap || "";
+        paper.aiMode = "api";
+        paper.aiModelUsed = `${cfg.shortName} · ${plan.isAuto ? "Auto → " : ""}${res.usedModel}`;
+      } catch (apiErr) {
+        if (shouldAllowFreeFallback(apiErr)) {
+          if (statusEl) statusEl.textContent = `AI API quá tải (${apiErr.message.slice(0, 40)}). Chuyển sang dự phòng Miễn phí...`;
+          const freeRes = await analyzePaperFreeMode(paper);
+          paper.aiSummary = freeRes.summary;
+          paper.aiMethod = freeRes.method;
+          paper.aiFindings = freeRes.findings;
+          paper.aiGap = freeRes.gap;
+          paper.aiMode = "free";
+          paper.aiModelUsed = "Dự phòng Miễn phí (AI API quá tải)";
+        } else {
+          throw apiErr;
+        }
+      }
     } else {
       if (statusEl) {
         statusEl.textContent = `Đang chạy lại (Không API Key): ${paper.title.slice(0, 50)}...`;
@@ -1941,10 +1990,10 @@ window.rerunSinglePaperMatrix = async function (id) {
     renderMatrixTable();
     const sec = ((Date.now() - startedAt) / 1000).toFixed(1);
     if (statusEl) {
-      statusEl.textContent = `Đã cập nhật xong "${paper.title.slice(0, 45)}..." trong ${sec}s (${mode === "api" ? "AI API" : "Không API Key"}).`;
+      statusEl.textContent = `Đã cập nhật xong "${paper.title.slice(0, 45)}..." trong ${sec}s (${paper.aiMode === "api" ? "AI API" : "Không API Key"}).`;
     }
   } catch (err) {
-    if (err.name === "AbortError" || stopAiFlag) {
+    if (err.isUserAbort || err.name === "AbortError" || stopAiFlag) {
       if (statusEl) statusEl.textContent = "Đã dừng phân tích.";
       return;
     }
@@ -1999,63 +2048,84 @@ async function runAiMatrixAnalysis() {
   try {
     if (mode === "api") {
       const plan = resolveAutoModelPlan(cfg.id, targets);
-      let activeCandidates = [...plan.candidateModels];
-      let apiCalls = 0;
-      let totalTokens = 0;
-      let completedPapers = 0;
-      let adaptiveDelayMs = 300;
+      const telemetry = { callsMade: 0, totalTokens: 0, hadRateLimit: false };
+      let preferredModel = plan.primaryModel;
       let lastUsedModel = plan.primaryModel;
+      let apiSuccessCount = 0;
+      let freeFallbackCount = 0;
+      let errorCount = 0;
+      let donePapers = 0;
 
       const batches = [];
       for (let i = 0; i < targets.length; i += plan.batchSize) {
         batches.push(targets.slice(i, i + plan.batchSize));
       }
 
-      for (let bIdx = 0; bIdx < batches.length; bIdx++) {
-        if (stopAiFlag) {
-          if (statusEl) statusEl.textContent = `Đã dừng ở lô ${bIdx}/${batches.length} (${completedPapers}/${targets.length} bài).`;
-          break;
-        }
+      const getOrderedCandidates = () => {
+        if (!preferredModel) return [...plan.candidateModels];
+        return [preferredModel, ...plan.candidateModels.filter((m) => m !== preferredModel)];
+      };
 
-        const batch = batches[bIdx];
+      const applyFreeFallbackForPapers = async (paperList) => {
+        await Promise.all(
+          paperList.map(async (p) => {
+            try {
+              const freeRes = await analyzePaperFreeMode(p);
+              p.aiSummary = freeRes.summary;
+              p.aiMethod = freeRes.method;
+              p.aiFindings = freeRes.findings;
+              p.aiGap = freeRes.gap;
+              p.aiMode = "free";
+              p.aiModelUsed = "Dự phòng Miễn phí (AI API quá tải)";
+              freeFallbackCount++;
+            } catch (e) {
+              p.aiSummary = `Lỗi AI: ${e.message}`;
+              p.aiMode = "";
+              errorCount++;
+            }
+          })
+        );
+      };
+
+      const processBatch = async (batch, bIdx) => {
         const batchLabel = `lô ${bIdx + 1}/${batches.length}`;
+        const candidates = getOrderedCandidates();
         if (statusEl) {
-          statusEl.textContent = `[AI API · ${plan.isAuto ? "Auto → " : ""}${activeCandidates[0]}] Đang xử lý ${batchLabel} (${batch.length} bài)...`;
+          statusEl.textContent = `[AI API · ${plan.isAuto ? "Auto → " : ""}${candidates[0]}] Đang xử lý ${batchLabel} (${batch.length} bài)...`;
         }
 
         try {
           const res = await callAiBatchWithRetryAndFallback(
             batch,
-            activeCandidates,
+            candidates,
             plan.maxAbstractChars,
             statusEl,
-            batchLabel
+            batchLabel,
+            telemetry
           );
-          apiCalls += res.callsMade || 1;
-          totalTokens += res.totalTokens || 0;
-          lastUsedModel = res.usedModel || activeCandidates[0];
-          if (res.hadRateLimit) adaptiveDelayMs = 2500;
-
-          // Ưu tiên model vừa chạy thành công cho các lô tiếp theo
-          if (lastUsedModel && activeCandidates[0] !== lastUsedModel) {
-            activeCandidates = [lastUsedModel, ...activeCandidates.filter((m) => m !== lastUsedModel)];
+          if (res.usedModel) {
+            preferredModel = res.usedModel;
+            lastUsedModel = res.usedModel;
           }
 
           for (let j = 0; j < batch.length; j++) {
             const p = batch[j];
             let item = res.items?.[j];
-            // Nếu model trả thiếu 1 mục trong batch, tự bù bằng 1 lời gọi đơn cho riêng bài thiếu
             if ((!item || (!item.summary && !item.findings)) && !stopAiFlag) {
               try {
                 const single = await callAiBatchWithRetryAndFallback(
                   [p],
-                  activeCandidates,
+                  getOrderedCandidates(),
                   plan.maxAbstractChars,
                   statusEl,
-                  `bù bài ${completedPapers + j + 1}`
+                  `bù bài`,
+                  telemetry,
+                  15000
                 );
-                apiCalls += single.callsMade || 1;
-                totalTokens += single.totalTokens || 0;
+                if (single.usedModel) {
+                  preferredModel = single.usedModel;
+                  lastUsedModel = single.usedModel;
+                }
                 item = single.items?.[0];
               } catch (_) {}
             }
@@ -2067,38 +2137,125 @@ async function runAiMatrixAnalysis() {
               p.aiGap = item.gap || "";
               p.aiMode = "api";
               p.aiModelUsed = `${cfg.shortName} · ${plan.isAuto ? "Auto → " : ""}${lastUsedModel}`;
+              apiSuccessCount++;
+            } else if (shouldAllowFreeFallback(new Error("Thiếu dữ liệu JSON"))) {
+              await applyFreeFallbackForPapers([p]);
             } else {
               p.aiSummary = "Lỗi AI: Model không trả đủ trường cho bài này.";
               p.aiMode = "";
+              errorCount++;
             }
           }
-
-          completedPapers += batch.length;
-          savePapers();
-          renderMatrixTable();
         } catch (err) {
-          if (err.name === "AbortError" || stopAiFlag) {
-            if (statusEl) statusEl.textContent = `Đã dừng (${completedPapers}/${targets.length} bài).`;
-            break;
+          if (err.isUserAbort || err.name === "AbortError" || stopAiFlag) {
+            throw err;
           }
-          console.error(err);
-          batch.forEach((p) => {
-            p.aiSummary = `Lỗi AI: ${err.message}`;
-            p.aiMode = "";
-          });
-          completedPapers += batch.length;
-          renderMatrixTable();
+
+          // Split-batch rescue: chỉ tách lô khi nghi quá tải kích thước lô (timeout hoặc lỗi parse JSON), không tách khi cả nhà cung cấp đang 503/429
+          const status = err.status || 0;
+          const shouldSplitBatch = batch.length > 1 && (err.isTimeout || status === 0);
+          if (shouldSplitBatch) {
+            if (statusEl) {
+              statusEl.textContent = `Tách ${batchLabel} thành từng bài đơn để tối ưu độ ổn định...`;
+            }
+            for (const p of batch) {
+              if (stopAiFlag) break;
+              try {
+                const single = await callAiBatchWithRetryAndFallback(
+                  [p],
+                  getOrderedCandidates(),
+                  plan.maxAbstractChars,
+                  statusEl,
+                  "tách bài",
+                  telemetry,
+                  15000
+                );
+                if (single.usedModel) {
+                  preferredModel = single.usedModel;
+                  lastUsedModel = single.usedModel;
+                }
+                const item = single.items?.[0];
+                if (item && (item.summary || item.findings || item.method || item.gap)) {
+                  p.aiSummary = item.summary || "";
+                  p.aiMethod = item.method || "";
+                  p.aiFindings = item.findings || "";
+                  p.aiGap = item.gap || "";
+                  p.aiMode = "api";
+                  p.aiModelUsed = `${cfg.shortName} · ${plan.isAuto ? "Auto → " : ""}${lastUsedModel}`;
+                  apiSuccessCount++;
+                  continue;
+                }
+              } catch (singleErr) {
+                if (singleErr.isUserAbort || singleErr.name === "AbortError" || stopAiFlag) throw singleErr;
+                if (shouldAllowFreeFallback(singleErr)) {
+                  await applyFreeFallbackForPapers([p]);
+                  continue;
+                }
+                p.aiSummary = `Lỗi AI: ${singleErr.message}`;
+                p.aiMode = "";
+                errorCount++;
+                continue;
+              }
+              if (shouldAllowFreeFallback(err)) {
+                await applyFreeFallbackForPapers([p]);
+              } else {
+                p.aiSummary = `Lỗi AI: ${err.message}`;
+                p.aiMode = "";
+                errorCount++;
+              }
+            }
+          } else if (shouldAllowFreeFallback(err)) {
+            if (statusEl) {
+              statusEl.textContent = `AI API quá tải ở ${batchLabel} (${err.message.slice(0, 42)}). Đang chuyển sang dự phòng Miễn phí...`;
+            }
+            await applyFreeFallbackForPapers(batch);
+          } else {
+            batch.forEach((p) => {
+              p.aiSummary = `Lỗi AI: ${err.message}`;
+              p.aiMode = "";
+              errorCount++;
+            });
+          }
         }
 
-        if (bIdx < batches.length - 1 && !stopAiFlag) {
-          await sleep(adaptiveDelayMs);
-        }
-      }
+        donePapers += batch.length;
+        savePapers();
+        renderMatrixTable();
+      };
 
-      if (!stopAiFlag && statusEl) {
+      // Chạy song song 2 luồng batch để rút ngắn tối đa thời gian; tự giảm về tuần tự nếu dính 429
+      const API_CONCURRENCY = Math.min(2, batches.length);
+      let nextBatchIdx = 0;
+
+      const apiWorker = async () => {
+        while (!stopAiFlag) {
+          const bIdx = nextBatchIdx++;
+          if (bIdx >= batches.length) break;
+          if (telemetry.hadRateLimit && bIdx > 0) {
+            await sleep(1200);
+          }
+          try {
+            await processBatch(batches[bIdx], bIdx);
+          } catch (err) {
+            if (err.isUserAbort || err.name === "AbortError" || stopAiFlag) break;
+          }
+        }
+      };
+
+      await Promise.all(Array.from({ length: API_CONCURRENCY }, () => apiWorker()));
+
+      if (stopAiFlag) {
+        if (statusEl) statusEl.textContent = `Đã dừng (${donePapers}/${targets.length} bài · ${telemetry.callsMade} lần gọi API).`;
+      } else if (statusEl) {
         const sec = ((Date.now() - startedAt) / 1000).toFixed(1);
-        const tokenText = totalTokens > 0 ? ` · ~${totalTokens.toLocaleString("vi-VN")} tokens` : "";
-        statusEl.textContent = `Hoàn tất ${targets.length} bài trong ${sec}s · ${apiCalls} lần gọi API${tokenText} · Model: ${lastUsedModel}`;
+        const tokenText = telemetry.totalTokens > 0 ? ` · ~${telemetry.totalTokens.toLocaleString("vi-VN")} tokens` : "";
+        if (freeFallbackCount > 0 && errorCount === 0) {
+          statusEl.textContent = `Hoàn tất ${apiSuccessCount + freeFallbackCount}/${targets.length} bài trong ${sec}s (${apiSuccessCount} AI API, ${freeFallbackCount} dự phòng Miễn phí · ${telemetry.callsMade} lần gọi API${tokenText})`;
+        } else if (errorCount > 0) {
+          statusEl.textContent = `Kết thúc trong ${sec}s: ${apiSuccessCount}/${targets.length} bài thành công, ${errorCount} bài lỗi (${telemetry.callsMade} lần gọi API).`;
+        } else {
+          statusEl.textContent = `Hoàn tất ${apiSuccessCount}/${targets.length} bài trong ${sec}s · ${telemetry.callsMade} lần gọi API${tokenText} · Model: ${lastUsedModel}`;
+        }
       }
     } else {
       // TRƯỜNG HỢP 2: CHẠY SONG SONG 3 LUỒNG + GỘP 1 LẦN DỊCH / BÀI
@@ -2273,32 +2430,58 @@ function parseRetryAfterMs(res) {
   return 0;
 }
 
-async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
+function getGeminiThinkingLevel(model, profile = "balanced") {
+  if (/flash/i.test(model || "") && profile !== "quality") {
+    return "minimal";
+  }
+  return "low";
+}
+
+async function callAiBatchRequest(batch, modelOverride, maxAbstractChars, telemetry = null, timeoutMsOverride = 0) {
   const cfg = AI_PROVIDERS[settings.provider] || AI_PROVIDERS.gemini;
   const model = (modelOverride || cfg.defaultModel).trim();
   const prompt = buildBatchMatrixPrompt(batch, maxAbstractChars);
-  const maxOutputTokens = Math.min(2800, 380 * batch.length + 220);
+  const maxOutputTokens = Math.min(2600, 450 * batch.length + 300);
   const signal = activeAbortController?.signal || null;
+  const timeoutMs = timeoutMsOverride || (settings.autoProfile === "quality" ? 28000 : 20000);
 
   if (cfg.protocol === "gemini") {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(settings.apiKey)}`;
-    const res = await fetchWithTimeout(
-      url,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.2,
-            maxOutputTokens
-          }
-        })
-      },
-      45000,
-      signal
-    );
+    const preferredLevel = getGeminiThinkingLevel(model, settings.autoProfile);
+
+    const sendGeminiReq = async (thinkingLevel) => {
+      if (telemetry) telemetry.callsMade++;
+      const generationConfig = {
+        responseMimeType: "application/json",
+        temperature: 0.2,
+        maxOutputTokens
+      };
+      if (thinkingLevel) {
+        generationConfig.thinkingConfig = { thinkingLevel };
+      }
+      return fetchWithTimeout(
+        url,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig
+          })
+        },
+        timeoutMs,
+        signal
+      );
+    };
+
+    let res = await sendGeminiReq(preferredLevel);
+    if (res.status === 400 && preferredLevel === "minimal") {
+      res = await sendGeminiReq("low");
+    }
+    if (res.status === 400) {
+      res = await sendGeminiReq(null);
+    }
+
     if (!res.ok) {
       const err = new Error(await readErrorMessage(res, "Gemini"));
       err.status = res.status;
@@ -2309,10 +2492,12 @@ async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
     const items = parseBatchAiResponse(rawText, batch.length);
     const totalTokens = data.usageMetadata?.totalTokenCount || 0;
+    if (telemetry) telemetry.totalTokens += totalTokens;
     return { items, totalTokens, usedModel: model };
   }
 
   if (cfg.protocol === "anthropic") {
+    if (telemetry) telemetry.callsMade++;
     const res = await fetchWithTimeout(
       "https://api.anthropic.com/v1/messages",
       {
@@ -2330,7 +2515,7 @@ async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
           messages: [{ role: "user", content: prompt }]
         })
       },
-      45000,
+      timeoutMs,
       signal
     );
     if (!res.ok) {
@@ -2343,6 +2528,7 @@ async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
     const textBlock = (data.content || []).find((c) => c.type === "text");
     const items = parseBatchAiResponse(textBlock?.text || "{}", batch.length);
     const totalTokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    if (telemetry) telemetry.totalTokens += totalTokens;
     return { items, totalTokens, usedModel: model };
   }
 
@@ -2357,6 +2543,7 @@ async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
   }
 
   const sendOpenAiReq = async (useJsonFormat) => {
+    if (telemetry) telemetry.callsMade++;
     const payload = {
       model,
       temperature: 0.2,
@@ -2373,7 +2560,7 @@ async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
         headers,
         body: JSON.stringify(payload)
       },
-      45000,
+      timeoutMs,
       signal
     );
   };
@@ -2392,13 +2579,20 @@ async function callAiBatchRequest(batch, modelOverride, maxAbstractChars) {
   const rawContent = data.choices?.[0]?.message?.content || "{}";
   const items = parseBatchAiResponse(rawContent, batch.length);
   const totalTokens = data.usage?.total_tokens || 0;
+  if (telemetry) telemetry.totalTokens += totalTokens;
   return { items, totalTokens, usedModel: model };
 }
 
-async function callAiBatchWithRetryAndFallback(batch, candidateModels, maxAbstractChars, statusEl, batchLabel) {
+async function callAiBatchWithRetryAndFallback(
+  batch,
+  candidateModels,
+  maxAbstractChars,
+  statusEl,
+  batchLabel,
+  telemetry = { callsMade: 0, totalTokens: 0, hadRateLimit: false },
+  timeoutMsOverride = 0
+) {
   const models = candidateModels && candidateModels.length > 0 ? candidateModels : [settings.model];
-  let callsMade = 0;
-  let hadRateLimit = false;
   let lastError = null;
 
   for (let mIdx = 0; mIdx < models.length; mIdx++) {
@@ -2406,43 +2600,93 @@ async function callAiBatchWithRetryAndFallback(batch, candidateModels, maxAbstra
     const hasNextModel = mIdx < models.length - 1;
 
     for (let attempt = 0; attempt < 2; attempt++) {
-      if (stopAiFlag) throw new Error("Đã dừng bởi người dùng");
+      if (stopAiFlag) {
+        const abortErr = new Error("Đã dừng bởi người dùng");
+        abortErr.name = "AbortError";
+        abortErr.isUserAbort = true;
+        throw abortErr;
+      }
+
       try {
-        callsMade++;
-        const result = await callAiBatchRequest(batch, model, maxAbstractChars);
-        return { ...result, callsMade, hadRateLimit };
+        const result = await callAiBatchRequest(batch, model, maxAbstractChars, telemetry, timeoutMsOverride);
+        return { ...result, callsMade: telemetry.callsMade, hadRateLimit: telemetry.hadRateLimit };
       } catch (err) {
-        if (err.name === "AbortError" || stopAiFlag) throw err;
+        if (err.isUserAbort || err.name === "AbortError" || stopAiFlag) throw err;
         lastError = err;
         const status = err.status || 0;
 
-        // Lỗi 401/402 (sai API Key hoặc hết tiền tài khoản) thì dừng luôn, không cần thử model khác
+        // Lỗi xác thực / thanh toán -> không thử model khác
         if (status === 401 || status === 402) throw err;
 
-        // Model không tồn tại / không có quyền (404 / 403 / 400) -> chuyển ngay sang model dự phòng nếu có
-        if ((status === 404 || status === 403 || status === 400) && hasNextModel) {
-          if (statusEl) {
-            statusEl.textContent = `Model "${model}" báo HTTP ${status} ở ${batchLabel}. Auto chuyển sang "${models[mIdx + 1]}"...`;
+        // Timeout -> không ngủ chờ retry model đang treo, chuyển ngay sang model kế tiếp
+        if (err.isTimeout) {
+          if (hasNextModel) {
+            if (statusEl) {
+              statusEl.textContent = `"${model}" phản hồi chậm ở ${batchLabel}. Chuyển nhanh sang "${models[mIdx + 1]}"...`;
+            }
+            break;
           }
-          break;
+          throw err;
         }
 
-        // Lỗi 429 (rate limit) hoặc 5xx / timeout mạng -> retry nhanh với backoff hoặc chuyển model dự phòng
-        const isTransient = status === 429 || status >= 500 || status === 0;
-        if (status === 429) hadRateLimit = true;
-
-        if (isTransient && attempt === 0) {
-          const waitMs = status === 429 ? err.retryAfterMs || 4000 : 1800;
-          if (statusEl) {
-            statusEl.textContent = `API (${model}) tạm nghẽn ở ${batchLabel}. Đợi ${(waitMs / 1000).toFixed(1)}s thử lại...`;
+        // Model không tồn tại / bị chặn / không hỗ trợ -> chuyển ngay
+        if (status === 404 || status === 403 || status === 400) {
+          if (hasNextModel) {
+            if (statusEl) {
+              statusEl.textContent = `"${model}" báo HTTP ${status} ở ${batchLabel}. Tự chuyển sang "${models[mIdx + 1]}"...`;
+            }
+            break;
           }
-          await sleep(waitMs);
+          throw err;
+        }
+
+        // HTTP 503 (High Demand) hoặc 5xx -> nếu còn model dự phòng thì chuyển nhanh sau 400ms, chỉ retry nếu là model cuối cùng
+        if (status >= 500) {
+          if (hasNextModel) {
+            if (statusEl) {
+              statusEl.textContent = `"${model}" đang quá tải (HTTP ${status}) ở ${batchLabel}. Chuyển sang "${models[mIdx + 1]}"...`;
+            }
+            await sleep(400);
+            break;
+          }
+          if (attempt === 0) {
+            if (statusEl) {
+              statusEl.textContent = `API (${model}) báo HTTP ${status} ở ${batchLabel}. Đợi 1.8s thử lại...`;
+            }
+            await sleep(1800);
+            continue;
+          }
+          throw err;
+        }
+
+        // HTTP 429 (Rate Limit)
+        if (status === 429) {
+          telemetry.hadRateLimit = true;
+          if (hasNextModel) {
+            if (statusEl) {
+              statusEl.textContent = `"${model}" chạm giới hạn 429 ở ${batchLabel}. Chuyển sang "${models[mIdx + 1]}"...`;
+            }
+            break;
+          }
+          if (attempt === 0) {
+            const waitMs = Math.min(6000, err.retryAfterMs || 3500);
+            if (statusEl) {
+              statusEl.textContent = `API (${model}) tạm giới hạn 429 ở ${batchLabel}. Đợi ${(waitMs / 1000).toFixed(1)}s thử lại...`;
+            }
+            await sleep(waitMs);
+            continue;
+          }
+          throw err;
+        }
+
+        // Lỗi mạng tạm thời (status === 0) hoặc JSON parse error
+        if (attempt === 0 && !hasNextModel) {
+          await sleep(1200);
           continue;
         }
-
         if (hasNextModel) {
           if (statusEl) {
-            statusEl.textContent = `Model "${model}" gặp lỗi (${err.message.slice(0, 50)}). Auto chuyển sang "${models[mIdx + 1]}"...`;
+            statusEl.textContent = `"${model}" gặp lỗi (${err.message.slice(0, 45)}). Chuyển sang "${models[mIdx + 1]}"...`;
           }
           break;
         }
