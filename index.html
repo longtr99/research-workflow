@@ -165,66 +165,176 @@
       <div class="card">
         <h2>Tự Động Tóm Tắt & Lập Ma Trận Tài Liệu (Literature Matrix)</h2>
         <p class="desc">
-          Hệ thống sẽ dùng API Key AI của bạn (cấu hình ở Tab 4) để đọc Abstract của các bài <strong>đã tick chọn</strong> ở Tab 1, sau đó tự động trích xuất thành các cột chuẩn để làm tổng quan tài liệu: <em>Mục tiêu nghiên cứu, Phương pháp & Dữ liệu, Phát hiện chính, Khoảng trống / Hạn chế</em>.
+          Chọn nhanh 1 trong 2 chế độ linh hoạt bên dưới để phân tích Abstract của các bài <strong>đã tick chọn</strong> ở Tab 1 thành 4 cột chuẩn (<em>Tóm tắt, Phương pháp & Mẫu dữ liệu, Kết quả chính, Khoảng trống nghiên cứu</em>). Bạn có thể chuyển chế độ và chạy lại bất cứ lúc nào.
         </p>
-        <div class="action-bar mt-12">
-          <button id="btnRunAiMatrix" class="btn btn-primary">Chạy AI Phân Tích Các Bài Đã Chọn (<span id="aiSelectedCount">0</span> bài)</button>
+
+        <!-- CHỌN 2 CHẾ ĐỘ LINH HOẠT NGAY TẠI TAB 3 -->
+        <div class="mode-cards mt-12" role="radiogroup" aria-label="Chế độ phân tích ma trận tài liệu">
+          <div class="mode-card" id="modeCardTab3Api" data-mode="api" tabindex="0" role="radio" aria-checked="true">
+            <div class="mode-card-header">
+              <span class="mode-step">Trường hợp 1</span>
+              <span class="mode-pill mode-pill-api">AI API · Chuyên sâu</span>
+            </div>
+            <h3>Dùng AI Chuyên Sâu (API Key)</h3>
+            <p class="mode-desc">
+              Dùng Google Gemini (2.5 Flash) / OpenAI / OpenRouter / Claude / DeepSeek… cấu hình ở Tab 4. Đọc hiểu sâu Abstract và viết tổng hợp 4 cột bằng tiếng Việt học thuật.
+            </p>
+            <div class="mode-meta" id="tab3ApiConfigHint">Đang kiểm tra cấu hình Tab 4...</div>
+          </div>
+
+          <div class="mode-card" id="modeCardTab3Free" data-mode="free" tabindex="0" role="radio" aria-checked="false">
+            <div class="mode-card-header">
+              <span class="mode-step">Trường hợp 2</span>
+              <span class="mode-pill mode-pill-free">Không API Key · Miễn phí</span>
+            </div>
+            <h3>Miễn Phí (Không cần API Key hay Email)</h3>
+            <p class="mode-desc">
+              Bấm chạy ngay không cần nhập API Key hay Email. Tự động tách câu mục tiêu, phương pháp/mẫu dữ liệu, phát hiện chính và hạn chế/khoảng trống từ Abstract OpenAlex rồi tự dịch nhanh sang tiếng Việt (giữ tiếng Anh nếu mất mạng).
+            </p>
+            <div class="mode-meta" id="tab3FreeHint">Sẵn sàng chạy ngay · Tự dịch tiếng Việt (qua server.py hoặc dịch trực tiếp; an toàn khi mất mạng).</div>
+          </div>
+        </div>
+
+        <div class="action-bar mt-16">
+          <button id="btnRunAiMatrix" class="btn btn-primary">
+            <span id="btnRunAiLabel">Chạy AI Phân Tích</span> (<span id="aiSelectedCount">0</span> bài)
+          </button>
           <button id="btnStopAi" class="btn btn-danger" disabled>Dừng</button>
+          <label class="inline-check" title="Bỏ chọn nếu bạn chỉ muốn chạy các bài chưa có kết quả">
+            <input type="checkbox" id="chkOverwriteMatrix" checked />
+            <span>Ghi đè bài đã phân tích (chạy lại bằng chế độ đang chọn)</span>
+          </label>
           <span id="aiStatus" class="status-text">Sẵn sàng.</span>
         </div>
       </div>
 
       <div class="card">
+        <div class="matrix-legend">
+          <span>Nhãn nguồn phân tích:</span>
+          <span class="tag tag-mode-api">AI API</span>
+          <span class="legend-sep">Phân tích sâu bằng AI API Key</span>
+          <span class="tag tag-mode-free">Không API Key</span>
+          <span class="legend-sep">Trích xuất tự động &amp; dịch nhanh miễn phí</span>
+        </div>
         <div class="table-wrapper">
           <table id="matrixTable">
             <thead>
               <tr>
-                <th width="160">Tác giả (Năm)</th>
+                <th width="180">Tác giả (Năm)</th>
                 <th width="200">Tên bài báo</th>
                 <th>Tóm tắt ngắn gọn (Tiếng Việt)</th>
-                <th>Phương pháp & Mẫu dữ liệu</th>
+                <th>Phương pháp &amp; Mẫu dữ liệu</th>
                 <th>Kết quả / Phát hiện chính</th>
                 <th>Khoảng trống nghiên cứu</th>
               </tr>
             </thead>
             <tbody id="matrixTbody">
-              <tr><td colspan="6" class="empty-row">Chưa có dữ liệu ma trận. Hãy tick chọn bài ở Tab 1 và bấm chạy AI.</td></tr>
+              <tr><td colspan="6" class="empty-row">Chưa có dữ liệu ma trận. Hãy tick chọn bài ở Tab 1 và bấm chạy phân tích.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- TAB 4: CẤU HÌNH API -->
+    <!-- TAB 4: CẤU HÌNH AI & DỮ LIỆU -->
     <section id="tab-settings" class="tab-content">
       <div class="card">
-        <h2>Cấu Hình API Cá Nhân (Lưu cục bộ trên trình duyệt)</h2>
+        <h2>Chế Độ Phân Tích Mặc Định (Đồng bộ trực tiếp với Tab 3)</h2>
+        <p class="desc">
+          Chọn chế độ bạn muốn dùng mặc định mỗi khi mở công cụ. Bạn vẫn có thể bấm chuyển đổi qua lại giữa 2 trường hợp ngay tại Tab 3 bất cứ lúc nào.
+        </p>
+
+        <div class="mode-cards mt-12" role="radiogroup" aria-label="Chế độ phân tích mặc định">
+          <div class="mode-card" id="modeCardTab4Api" data-mode="api" tabindex="0" role="radio" aria-checked="true">
+            <div class="mode-card-header">
+              <span class="mode-step">Trường hợp 1</span>
+              <span class="mode-pill mode-pill-api">AI API · Chuyên sâu</span>
+            </div>
+            <h3>Dùng AI Chuyên Sâu (API Key)</h3>
+            <p class="mode-desc">
+              Ưu tiên tổng hợp sâu, văn phong tiếng Việt học thuật bằng model AI bạn chọn bên dưới (Google Gemini, OpenAI, OpenRouter, Claude, DeepSeek, Groq, xAI, Mistral…).
+            </p>
+          </div>
+
+          <div class="mode-card" id="modeCardTab4Free" data-mode="free" tabindex="0" role="radio" aria-checked="false">
+            <div class="mode-card-header">
+              <span class="mode-step">Trường hợp 2</span>
+              <span class="mode-pill mode-pill-free">Không API Key · Miễn phí</span>
+            </div>
+            <h3>Miễn Phí (Không cần API Key hay Email)</h3>
+            <p class="mode-desc">
+              Không cần nhập API Key hay Email. Tự động tách 4 nội dung trọng tâm từ Abstract OpenAlex và dịch nhanh sang tiếng Việt (hỗ trợ chạy qua <code>server.py</code> hoặc trực tiếp trên GitHub Pages).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Cấu Hình AI Chuyên Sâu &amp; Dữ Liệu (Lưu cục bộ trên trình duyệt)</h2>
         <p class="desc">API Key chỉ lưu trong <code>localStorage</code> trên máy của bạn, không gửi đi bất kỳ server trung gian nào ngoài nhà cung cấp AI bạn chọn.</p>
-        
+
+        <div class="tip-box mt-12">
+          <strong>Gợi ý tạo Gemini API Key miễn phí:</strong>
+          Truy cập
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+          để tạo khóa Google Gemini miễn phí trong 30 giây, dùng mượt với <code>gemini-2.5-flash</code> hoặc dòng Gemini 3 / 4 mới nhất.
+        </div>
+
         <div class="grid-2 mt-12">
           <div class="form-group">
-            <label>Nhà cung cấp AI</label>
-            <select id="aiProvider">
-              <option value="gemini">Google Gemini (Khuyên dùng - Gemini 2.5 Flash)</option>
-              <option value="openai">OpenAI (GPT-4o-mini / GPT-4o)</option>
-            </select>
+            <label for="aiProvider">
+              Nhà cung cấp AI
+              <span id="providerCountBadge" class="count-pill"></span>
+            </label>
+            <select id="aiProvider"></select>
           </div>
+
           <div class="form-group">
-            <label>Tên Model</label>
-            <input type="text" id="aiModel" value="gemini-2.5-flash" />
+            <div class="label-row">
+              <label for="aiModelSelect">
+                Danh sách Model tự cập nhật
+                <span id="modelCountBadge" class="count-pill"></span>
+              </label>
+              <button type="button" id="btnFetchModels" class="btn-inline" title="Lấy toàn bộ danh sách model mới nhất trực tiếp từ API nhà cung cấp">
+                ↻ Tải model mới từ API
+              </button>
+            </div>
+            <select id="aiModelSelect"></select>
           </div>
+
           <div class="form-group col-2">
-            <label>API Key của bạn</label>
-            <input type="password" id="aiApiKey" placeholder="Nhập Gemini API Key (AIza...) hoặc OpenAI API Key (sk-...)" />
+            <label for="aiModel">Tên Model đang sử dụng (tự nhảy khi chọn ở trên, hoặc nhập mã model tùy ý)</label>
+            <input type="text" id="aiModel" value="gemini-2.5-flash" placeholder="VD: gemini-2.5-flash, gpt-4o-mini, anthropic/claude-sonnet-5-5..." />
+            <div id="modelFetchStatus" class="field-hint"></div>
           </div>
+
+          <div class="form-group col-2" id="customBaseUrlGroup" style="display: none;">
+            <label for="customBaseUrl">Base URL tương thích OpenAI (Ollama / LM Studio / Proxy / Self-hosted)</label>
+            <input type="url" id="customBaseUrl" placeholder="VD: http://localhost:11434/v1 hoặc https://api.example.com/v1" />
+          </div>
+
           <div class="form-group col-2">
-            <label>Email của bạn (Tùy chọn - giúp OpenAlex cấp tốc độ truy vấn ưu tiên Polite Pool)</label>
-            <input type="email" id="userEmail" placeholder="vd: tenban@gmail.com" />
+            <div class="label-row">
+              <label for="aiApiKey">API Key của bạn (chỉ cần cho Trường hợp 1)</label>
+              <a id="providerKeyLink" class="key-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">
+                Lấy API Key miễn phí tại Google AI Studio ↗
+              </a>
+            </div>
+            <div class="input-with-btn">
+              <input type="password" id="aiApiKey" placeholder="Nhập Gemini API Key (AIza...) hoặc API Key của nhà cung cấp đã chọn" />
+              <button type="button" id="btnToggleApiKey" class="btn btn-secondary btn-small">Hiện</button>
+            </div>
+          </div>
+
+          <div class="form-group col-2">
+            <label for="userEmail">Email của bạn (Không bắt buộc — giúp OpenAlex cấp tốc độ ưu tiên Polite Pool; Trường hợp 2 không cần nhập)</label>
+            <input type="email" id="userEmail" placeholder="vd: tenban@gmail.com (có thể để trống)" />
           </div>
         </div>
 
         <div class="action-bar mt-16">
           <button id="btnSaveSettings" class="btn btn-primary">Lưu Cấu Hình</button>
+          <button id="btnTestApi" class="btn btn-secondary">Kiểm Tra Kết Nối AI</button>
           <span id="settingsStatus" class="status-text"></span>
         </div>
       </div>
